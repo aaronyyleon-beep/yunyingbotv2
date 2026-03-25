@@ -1,0 +1,10 @@
+{
+  "type": "object",
+  "properties": {
+    "targeted_collection_plan": { "type": "array", "items": { "type": "string" } },
+    "priority_targets": { "type": "array", "items": { "type": "string" } },
+    "expected_factor_coverage": { "type": "array", "items": { "type": "string" } },
+    "blocking_risks": { "type": "array", "items": { "type": "string" } }
+  },
+  "required": ["targeted_collection_plan", "priority_targets", "expected_factor_coverage", "blocking_risks"]
+}

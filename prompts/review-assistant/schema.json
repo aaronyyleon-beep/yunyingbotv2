@@ -1,0 +1,10 @@
+{
+  "type": "object",
+  "properties": {
+    "updated_factor_reasoning": { "type": "string" },
+    "impact_on_dimension": { "type": "string" },
+    "impact_on_report": { "type": "string" },
+    "remaining_uncertainties": { "type": "array", "items": { "type": "string" } }
+  },
+  "required": ["updated_factor_reasoning", "impact_on_dimension", "impact_on_report", "remaining_uncertainties"]
+}

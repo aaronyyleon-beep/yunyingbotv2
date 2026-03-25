@@ -1,0 +1,29 @@
+{
+  "version": "v1",
+  "factor_statuses": [
+    "pending",
+    "insufficient_evidence",
+    "analyzed",
+    "reviewed",
+    "overridden",
+    "locked"
+  ],
+  "task_statuses": [
+    "created",
+    "collecting",
+    "analyzing",
+    "waiting_review",
+    "recalculating",
+    "completed",
+    "failed"
+  ],
+  "semantic_tags": [
+    "high_risk",
+    "medium_risk",
+    "low_risk",
+    "key_opportunity",
+    "needs_review",
+    "evidence_missing",
+    "human_updated"
+  ]
+}

@@ -1,0 +1,161 @@
+{
+  "version": "v1",
+  "dimensions": [
+    {
+      "dimension_key": "product_maturity",
+      "dimension_name": "产品成熟度",
+      "factors": [
+        {
+          "factor_key": "website_completeness",
+          "factor_name": "官网完成度",
+          "description": "判断官网是否完整、清晰，是否存在明显壳站或敷衍迹象",
+          "expected_evidence_types": ["website_page", "website_structure", "product_page"]
+        },
+        {
+          "factor_key": "whitepaper_depth",
+          "factor_name": "白皮书深度",
+          "description": "判断白皮书或 Docs 是否具备足够机制深度和细节",
+          "expected_evidence_types": ["whitepaper", "docs_page", "technical_page"]
+        },
+        {
+          "factor_key": "product_functionality",
+          "factor_name": "产品核心功能可用性",
+          "description": "判断产品是否具备真实可访问、可交互的核心功能",
+          "expected_evidence_types": ["product_page", "demo_page", "interaction_page"]
+        },
+        {
+          "factor_key": "onchain_product_presence",
+          "factor_name": "链上产品落地性",
+          "description": "判断产品是否已有链上存在、交互、TVL 或其他落地迹象",
+          "expected_evidence_types": ["contract_page", "onchain_metric", "defi_data"]
+        }
+      ]
+    },
+    {
+      "dimension_key": "community_user_health",
+      "dimension_name": "社区与用户健康度",
+      "factors": [
+        {
+          "factor_key": "twitter_content_quality",
+          "factor_name": "Twitter 内容质量",
+          "description": "判断 Twitter 更新、内容深度和营销噪声情况",
+          "expected_evidence_types": ["twitter_profile", "twitter_posts", "twitter_summary"]
+        },
+        {
+          "factor_key": "community_activity_quality",
+          "factor_name": "社区活跃质量",
+          "description": "判断社区是否存在真实、自然、围绕产品的讨论",
+          "expected_evidence_types": ["telegram_messages", "discord_messages", "community_summary"]
+        },
+        {
+          "factor_key": "effective_user_signals",
+          "factor_name": "有效用户迹象",
+          "description": "判断是否存在真实提问、产品相关交流和深度互动",
+          "expected_evidence_types": ["community_messages", "twitter_replies", "product_feedback"]
+        },
+        {
+          "factor_key": "user_purchasing_power_signals",
+          "factor_name": "用户购买力迹象",
+          "description": "判断用户是否存在链上购买力与真实参与迹象",
+          "expected_evidence_types": ["wallet_activity", "onchain_metric", "tvl_metric"]
+        }
+      ]
+    },
+    {
+      "dimension_key": "bot_risk",
+      "dimension_name": "Bot 风险",
+      "factors": [
+        {
+          "factor_key": "twitter_abnormal_engagement",
+          "factor_name": "Twitter 异常互动迹象",
+          "description": "判断 Twitter 互动结构是否异常、重复或虚高",
+          "expected_evidence_types": ["twitter_posts", "twitter_replies", "engagement_metric"]
+        },
+        {
+          "factor_key": "community_bot_patterns",
+          "factor_name": "社区机械回复迹象",
+          "description": "判断社区中是否存在重复模板、机械对话或机器人行为",
+          "expected_evidence_types": ["telegram_messages", "discord_messages", "community_test_result"]
+        },
+        {
+          "factor_key": "user_structure_anomaly",
+          "factor_name": "用户结构异常迹象",
+          "description": "判断 Twitter、社区和链上体量之间是否明显失衡",
+          "expected_evidence_types": ["twitter_metric", "community_metric", "onchain_metric"]
+        }
+      ]
+    },
+    {
+      "dimension_key": "growth_potential",
+      "dimension_name": "增长潜力",
+      "factors": [
+        {
+          "factor_key": "narrative_market_fit",
+          "factor_name": "叙事与市场方向匹配度",
+          "description": "判断项目叙事与当前市场方向的匹配程度",
+          "expected_evidence_types": ["website_page", "whitepaper", "twitter_posts"]
+        },
+        {
+          "factor_key": "campaign_product_fit",
+          "factor_name": "当前活动与产品匹配度",
+          "description": "判断增长活动是否围绕产品而非纯刷量",
+          "expected_evidence_types": ["campaign_page", "announcement", "reward_rules"]
+        },
+        {
+          "factor_key": "regional_fit",
+          "factor_name": "区域结构匹配度",
+          "description": "判断用户区域结构是否与产品目标市场匹配",
+          "expected_evidence_types": ["community_channels", "region_clues", "language_distribution"]
+        }
+      ]
+    },
+    {
+      "dimension_key": "cross_validation",
+      "dimension_name": "交叉验证可信度",
+      "factors": [
+        {
+          "factor_key": "claim_whitepaper_consistency",
+          "factor_name": "项目说法与白皮书一致性",
+          "description": "判断项目对外表述与白皮书内容是否一致",
+          "expected_evidence_types": ["website_page", "twitter_posts", "whitepaper"]
+        },
+        {
+          "factor_key": "whitepaper_onchain_consistency",
+          "factor_name": "白皮书与链上表现一致性",
+          "description": "判断白皮书机制与链上现状是否匹配",
+          "expected_evidence_types": ["whitepaper", "contract_page", "onchain_metric"]
+        },
+        {
+          "factor_key": "community_onchain_consistency",
+          "factor_name": "社区体量与链上体量一致性",
+          "description": "判断社区、Twitter 和链上体量是否基本一致",
+          "expected_evidence_types": ["community_metric", "twitter_metric", "onchain_metric"]
+        }
+      ]
+    },
+    {
+      "dimension_key": "overall_risk",
+      "dimension_name": "综合风险等级",
+      "factors": [
+        {
+          "factor_key": "timeline_risk",
+          "factor_name": "时间窗口风险",
+          "description": "判断项目时间窗口是否过短，导致运营风险偏高",
+          "expected_evidence_types": ["roadmap", "team_statement", "manual_input"]
+        },
+        {
+          "factor_key": "team_size_risk",
+          "factor_name": "团队规模风险",
+          "description": "判断项目团队规模是否支持目标实现",
+          "expected_evidence_types": ["team_page", "team_statement", "manual_input"]
+        },
+        {
+          "factor_key": "budget_risk",
+          "factor_name": "预算风险",
+          "description": "判断项目预算是否支持后续建设与增长",
+          "expected_evidence_types": ["team_statement", "manual_input"]
+        }
+      ]
+    }
+  ]
+}

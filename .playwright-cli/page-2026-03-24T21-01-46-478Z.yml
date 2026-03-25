@@ -1,0 +1,407 @@
+- main [ref=e3]:
+  - generic [ref=e4]:
+    - generic [ref=e5]:
+      - paragraph [ref=e6]: Intelligence Console
+      - heading "Task Grid" [level=1] [ref=e7]
+    - generic [ref=e8]:
+      - paragraph [ref=e9]: New Intake
+      - generic [ref=e10]:
+        - generic [ref=e11]: Website
+        - textbox "Website" [ref=e12]: https://docs.python.org/3/
+      - generic [ref=e13]:
+        - generic [ref=e14]: Docs / Whitepaper
+        - textbox "Docs / Whitepaper" [ref=e15]: https://nodejs.org/api/documentation.html
+      - generic [ref=e16]:
+        - generic [ref=e17]: Twitter / X
+        - textbox "Twitter / X" [ref=e18]: https://twitter.com/OpenAI/status/1900000000000000001
+      - generic [ref=e19]:
+        - generic [ref=e20]: Contract
+        - textbox "Contract" [ref=e21]
+      - generic [ref=e22]:
+        - generic [ref=e23]: Notes
+        - textbox "Notes" [ref=e24]: new task from web intake
+      - button "创建任务" [ref=e25] [cursor=pointer]
+    - generic [ref=e80]:
+      - button "smoke create task -- fdca10fc · 未复核 风险等级：未知" [ref=e81] [cursor=pointer]:
+        - generic [ref=e82]:
+          - generic [ref=e83]: smoke create task
+          - generic [ref=e84]: "--"
+        - paragraph [ref=e85]: fdca10fc · 未复核
+        - paragraph [ref=e86]: 风险等级：未知
+      - button "beatswap -- 2ad31ab3 · 未复核 风险等级：未知" [ref=e87] [cursor=pointer]:
+        - generic [ref=e88]:
+          - generic [ref=e89]: beatswap
+          - generic [ref=e90]: "--"
+        - paragraph [ref=e91]: 2ad31ab3 · 未复核
+        - paragraph [ref=e92]: 风险等级：未知
+      - button "unknown-project -- f123aba5 · 未复核 风险等级：未知" [ref=e93] [cursor=pointer]:
+        - generic [ref=e94]:
+          - generic [ref=e95]: unknown-project
+          - generic [ref=e96]: "--"
+        - paragraph [ref=e97]: f123aba5 · 未复核
+        - paragraph [ref=e98]: 风险等级：未知
+      - button "unknown-project -- e9f4840e · 未复核 风险等级：未知" [ref=e99] [cursor=pointer]:
+        - generic [ref=e100]:
+          - generic [ref=e101]: unknown-project
+          - generic [ref=e102]: "--"
+        - paragraph [ref=e103]: e9f4840e · 未复核
+        - paragraph [ref=e104]: 风险等级：未知
+      - button "unknown-project -- f2d0edda · 未复核 风险等级：未知" [ref=e105] [cursor=pointer]:
+        - generic [ref=e106]:
+          - generic [ref=e107]: unknown-project
+          - generic [ref=e108]: "--"
+        - paragraph [ref=e109]: f2d0edda · 未复核
+        - paragraph [ref=e110]: 风险等级：未知
+      - button "unknown-project -- dd2115e1 · 未复核 风险等级：未知" [ref=e111] [cursor=pointer]:
+        - generic [ref=e112]:
+          - generic [ref=e113]: unknown-project
+          - generic [ref=e114]: "--"
+        - paragraph [ref=e115]: dd2115e1 · 未复核
+        - paragraph [ref=e116]: 风险等级：未知
+      - button "unknown-project -- 5264ccea · 未复核 风险等级：未知" [ref=e117] [cursor=pointer]:
+        - generic [ref=e118]:
+          - generic [ref=e119]: unknown-project
+          - generic [ref=e120]: "--"
+        - paragraph [ref=e121]: 5264ccea · 未复核
+        - paragraph [ref=e122]: 风险等级：未知
+      - button "unknown-project -- 86015c74 · 未复核 风险等级：未知" [ref=e123] [cursor=pointer]:
+        - generic [ref=e124]:
+          - generic [ref=e125]: unknown-project
+          - generic [ref=e126]: "--"
+        - paragraph [ref=e127]: 86015c74 · 未复核
+        - paragraph [ref=e128]: 风险等级：未知
+      - button "unknown-project -- f5daf4f4 · 未复核 风险等级：未知" [ref=e129] [cursor=pointer]:
+        - generic [ref=e130]:
+          - generic [ref=e131]: unknown-project
+          - generic [ref=e132]: "--"
+        - paragraph [ref=e133]: f5daf4f4 · 未复核
+        - paragraph [ref=e134]: 风险等级：未知
+      - button "unknown-project -- 0056c901 · 未复核 风险等级：未知" [ref=e135] [cursor=pointer]:
+        - generic [ref=e136]:
+          - generic [ref=e137]: unknown-project
+          - generic [ref=e138]: "--"
+        - paragraph [ref=e139]: 0056c901 · 未复核
+        - paragraph [ref=e140]: 风险等级：未知
+      - button "discord factor check -- 9082e765 · 未复核 风险等级：未知" [ref=e141] [cursor=pointer]:
+        - generic [ref=e142]:
+          - generic [ref=e143]: discord factor check
+          - generic [ref=e144]: "--"
+        - paragraph [ref=e145]: 9082e765 · 未复核
+        - paragraph [ref=e146]: 风险等级：未知
+      - button "discord smoke test -- df5fea04 · 未复核 风险等级：未知" [ref=e147] [cursor=pointer]:
+        - generic [ref=e148]:
+          - generic [ref=e149]: discord smoke test
+          - generic [ref=e150]: "--"
+        - paragraph [ref=e151]: df5fea04 · 未复核
+        - paragraph [ref=e152]: 风险等级：未知
+      - button "telegram factor smoke -- 34a2e58e · 未复核 风险等级：未知" [ref=e153] [cursor=pointer]:
+        - generic [ref=e154]:
+          - generic [ref=e155]: telegram factor smoke
+          - generic [ref=e156]: "--"
+        - paragraph [ref=e157]: 34a2e58e · 未复核
+        - paragraph [ref=e158]: 风险等级：未知
+      - button "telegram factor smoke -- 4c03e44f · 未复核 风险等级：未知" [ref=e159] [cursor=pointer]:
+        - generic [ref=e160]:
+          - generic [ref=e161]: telegram factor smoke
+          - generic [ref=e162]: "--"
+        - paragraph [ref=e163]: 4c03e44f · 未复核
+        - paragraph [ref=e164]: 风险等级：未知
+      - button "telegram buffer smoke -- 586d2f78 · 未复核 风险等级：未知" [ref=e165] [cursor=pointer]:
+        - generic [ref=e166]:
+          - generic [ref=e167]: telegram buffer smoke
+          - generic [ref=e168]: "--"
+        - paragraph [ref=e169]: 586d2f78 · 未复核
+        - paragraph [ref=e170]: 风险等级：未知
+      - button "telegram buffer smoke -- 954f46f1 · 未复核 风险等级：未知" [ref=e171] [cursor=pointer]:
+        - generic [ref=e172]:
+          - generic [ref=e173]: telegram buffer smoke
+          - generic [ref=e174]: "--"
+        - paragraph [ref=e175]: 954f46f1 · 未复核
+        - paragraph [ref=e176]: 风险等级：未知
+      - button "telegram smoke test -- 7b1c49c3 · 未复核 风险等级：未知" [ref=e177] [cursor=pointer]:
+        - generic [ref=e178]:
+          - generic [ref=e179]: telegram smoke test
+          - generic [ref=e180]: "--"
+        - paragraph [ref=e181]: 7b1c49c3 · 未复核
+        - paragraph [ref=e182]: 风险等级：未知
+      - button "community evidence smoke -- 61983d15 · 未复核 风险等级：未知" [ref=e183] [cursor=pointer]:
+        - generic [ref=e184]:
+          - generic [ref=e185]: community evidence smoke
+          - generic [ref=e186]: "--"
+        - paragraph [ref=e187]: 61983d15 · 未复核
+        - paragraph [ref=e188]: 风险等级：未知
+      - button "community intake test -- 423286bf · 未复核 风险等级：未知" [ref=e189] [cursor=pointer]:
+        - generic [ref=e190]:
+          - generic [ref=e191]: community intake test
+          - generic [ref=e192]: "--"
+        - paragraph [ref=e193]: 423286bf · 未复核
+        - paragraph [ref=e194]: 风险等级：未知
+      - button "Juu17__ -- 3a71e5bd · 未复核 风险等级：未知" [ref=e195] [cursor=pointer]:
+        - generic [ref=e196]:
+          - generic [ref=e197]: Juu17__
+          - generic [ref=e198]: "--"
+        - paragraph [ref=e199]: 3a71e5bd · 未复核
+        - paragraph [ref=e200]: 风险等级：未知
+      - button "Juu17__ -- cfd5a190 · 未复核 风险等级：未知" [ref=e201] [cursor=pointer]:
+        - generic [ref=e202]:
+          - generic [ref=e203]: Juu17__
+          - generic [ref=e204]: "--"
+        - paragraph [ref=e205]: cfd5a190 · 未复核
+        - paragraph [ref=e206]: 风险等级：未知
+      - button "Juu17__ -- 8080b18a · 未复核 风险等级：未知" [ref=e207] [cursor=pointer]:
+        - generic [ref=e208]:
+          - generic [ref=e209]: Juu17__
+          - generic [ref=e210]: "--"
+        - paragraph [ref=e211]: 8080b18a · 未复核
+        - paragraph [ref=e212]: 风险等级：未知
+      - button "Juu17__ -- 2e979825 · 未复核 风险等级：未知" [ref=e213] [cursor=pointer]:
+        - generic [ref=e214]:
+          - generic [ref=e215]: Juu17__
+          - generic [ref=e216]: "--"
+        - paragraph [ref=e217]: 2e979825 · 未复核
+        - paragraph [ref=e218]: 风险等级：未知
+      - button "Juu17__ -- cb1b5012 · 未复核 风险等级：未知" [ref=e219] [cursor=pointer]:
+        - generic [ref=e220]:
+          - generic [ref=e221]: Juu17__
+          - generic [ref=e222]: "--"
+        - paragraph [ref=e223]: cb1b5012 · 未复核
+        - paragraph [ref=e224]: 风险等级：未知
+      - button "Juu17__ -- 890556ac · 未复核 风险等级：未知" [ref=e225] [cursor=pointer]:
+        - generic [ref=e226]:
+          - generic [ref=e227]: Juu17__
+          - generic [ref=e228]: "--"
+        - paragraph [ref=e229]: 890556ac · 未复核
+        - paragraph [ref=e230]: 风险等级：未知
+      - button "Juu17__ -- 20377b43 · 未复核 风险等级：未知" [ref=e231] [cursor=pointer]:
+        - generic [ref=e232]:
+          - generic [ref=e233]: Juu17__
+          - generic [ref=e234]: "--"
+        - paragraph [ref=e235]: 20377b43 · 未复核
+        - paragraph [ref=e236]: 风险等级：未知
+      - button "Juu17__ -- d8b1bf33 · 未复核 风险等级：未知" [ref=e237] [cursor=pointer]:
+        - generic [ref=e238]:
+          - generic [ref=e239]: Juu17__
+          - generic [ref=e240]: "--"
+        - paragraph [ref=e241]: d8b1bf33 · 未复核
+        - paragraph [ref=e242]: 风险等级：未知
+      - button "Juu17__ -- b4bd1b05 · 未复核 风险等级：未知" [ref=e243] [cursor=pointer]:
+        - generic [ref=e244]:
+          - generic [ref=e245]: Juu17__
+          - generic [ref=e246]: "--"
+        - paragraph [ref=e247]: b4bd1b05 · 未复核
+        - paragraph [ref=e248]: 风险等级：未知
+      - button "Juu17__ -- 4b08840d · 未复核 风险等级：未知" [ref=e249] [cursor=pointer]:
+        - generic [ref=e250]:
+          - generic [ref=e251]: Juu17__
+          - generic [ref=e252]: "--"
+        - paragraph [ref=e253]: 4b08840d · 未复核
+        - paragraph [ref=e254]: 风险等级：未知
+      - button "Juu17__ -- c6f9a74d · 未复核 风险等级：未知" [ref=e255] [cursor=pointer]:
+        - generic [ref=e256]:
+          - generic [ref=e257]: Juu17__
+          - generic [ref=e258]: "--"
+        - paragraph [ref=e259]: c6f9a74d · 未复核
+        - paragraph [ref=e260]: 风险等级：未知
+      - button "Juu17__ -- 88102c60 · 未复核 风险等级：未知" [ref=e261] [cursor=pointer]:
+        - generic [ref=e262]:
+          - generic [ref=e263]: Juu17__
+          - generic [ref=e264]: "--"
+        - paragraph [ref=e265]: 88102c60 · 未复核
+        - paragraph [ref=e266]: 风险等级：未知
+      - button "Juu17__ -- f8642f23 · 未复核 风险等级：未知" [ref=e267] [cursor=pointer]:
+        - generic [ref=e268]:
+          - generic [ref=e269]: Juu17__
+          - generic [ref=e270]: "--"
+        - paragraph [ref=e271]: f8642f23 · 未复核
+        - paragraph [ref=e272]: 风险等级：未知
+      - button "Juu17__ -- acb6608f · 未复核 风险等级：未知" [ref=e273] [cursor=pointer]:
+        - generic [ref=e274]:
+          - generic [ref=e275]: Juu17__
+          - generic [ref=e276]: "--"
+        - paragraph [ref=e277]: acb6608f · 未复核
+        - paragraph [ref=e278]: 风险等级：未知
+      - button "Juu17__ -- 28d16514 · 未复核 风险等级：未知" [ref=e279] [cursor=pointer]:
+        - generic [ref=e280]:
+          - generic [ref=e281]: Juu17__
+          - generic [ref=e282]: "--"
+        - paragraph [ref=e283]: 28d16514 · 未复核
+        - paragraph [ref=e284]: 风险等级：未知
+      - button "Juu17__ -- 3b272fdd · 未复核 风险等级：未知" [ref=e285] [cursor=pointer]:
+        - generic [ref=e286]:
+          - generic [ref=e287]: Juu17__
+          - generic [ref=e288]: "--"
+        - paragraph [ref=e289]: 3b272fdd · 未复核
+        - paragraph [ref=e290]: 风险等级：未知
+      - button "OpenAI -- c00e19b6 · 未复核 风险等级：未知" [ref=e291] [cursor=pointer]:
+        - generic [ref=e292]:
+          - generic [ref=e293]: OpenAI
+          - generic [ref=e294]: "--"
+        - paragraph [ref=e295]: c00e19b6 · 未复核
+        - paragraph [ref=e296]: 风险等级：未知
+      - button "OpenAI -- 45a1319b · 未复核 风险等级：未知" [ref=e297] [cursor=pointer]:
+        - generic [ref=e298]:
+          - generic [ref=e299]: OpenAI
+          - generic [ref=e300]: "--"
+        - paragraph [ref=e301]: 45a1319b · 未复核
+        - paragraph [ref=e302]: 风险等级：未知
+      - button "OpenAI -- 2ab29188 · 未复核 风险等级：未知" [ref=e303] [cursor=pointer]:
+        - generic [ref=e304]:
+          - generic [ref=e305]: OpenAI
+          - generic [ref=e306]: "--"
+        - paragraph [ref=e307]: 2ab29188 · 未复核
+        - paragraph [ref=e308]: 风险等级：未知
+      - button "pending-project -- b5cf20c1 · 未复核 风险等级：未知" [ref=e309] [cursor=pointer]:
+        - generic [ref=e310]:
+          - generic [ref=e311]: pending-project
+          - generic [ref=e312]: "--"
+        - paragraph [ref=e313]: b5cf20c1 · 未复核
+        - paragraph [ref=e314]: 风险等级：未知
+      - button "pending-project -- f23c648b · 未复核 风险等级：未知" [ref=e315] [cursor=pointer]:
+        - generic [ref=e316]:
+          - generic [ref=e317]: pending-project
+          - generic [ref=e318]: "--"
+        - paragraph [ref=e319]: f23c648b · 未复核
+        - paragraph [ref=e320]: 风险等级：未知
+      - button "OpenAI -- 86edaf2f · 未复核 风险等级：未知" [ref=e321] [cursor=pointer]:
+        - generic [ref=e322]:
+          - generic [ref=e323]: OpenAI
+          - generic [ref=e324]: "--"
+        - paragraph [ref=e325]: 86edaf2f · 未复核
+        - paragraph [ref=e326]: 风险等级：未知
+      - button "pending-project -- 78b7a0d2 · 未复核 风险等级：未知" [ref=e327] [cursor=pointer]:
+        - generic [ref=e328]:
+          - generic [ref=e329]: pending-project
+          - generic [ref=e330]: "--"
+        - paragraph [ref=e331]: 78b7a0d2 · 未复核
+        - paragraph [ref=e332]: 风险等级：未知
+      - button "1760331900845734278 -- fcb83059 · 未复核 风险等级：未知" [ref=e333] [cursor=pointer]:
+        - generic [ref=e334]:
+          - generic [ref=e335]: "1760331900845734278"
+          - generic [ref=e336]: "--"
+        - paragraph [ref=e337]: fcb83059 · 未复核
+        - paragraph [ref=e338]: 风险等级：未知
+      - button "pending-project -- 75afb4bb · 未复核 风险等级：未知" [ref=e339] [cursor=pointer]:
+        - generic [ref=e340]:
+          - generic [ref=e341]: pending-project
+          - generic [ref=e342]: "--"
+        - paragraph [ref=e343]: 75afb4bb · 未复核
+        - paragraph [ref=e344]: 风险等级：未知
+      - button "pending-project -- 7350a863 · 未复核 风险等级：未知" [ref=e345] [cursor=pointer]:
+        - generic [ref=e346]:
+          - generic [ref=e347]: pending-project
+          - generic [ref=e348]: "--"
+        - paragraph [ref=e349]: 7350a863 · 未复核
+        - paragraph [ref=e350]: 风险等级：未知
+      - button "pending-project 3.4 e746a4f1 · revised 风险等级：high" [ref=e351] [cursor=pointer]:
+        - generic [ref=e352]:
+          - generic [ref=e353]: pending-project
+          - generic [ref=e354]: "3.4"
+        - paragraph [ref=e355]: e746a4f1 · revised
+        - paragraph [ref=e356]: 风险等级：high
+      - button "pending-project 3.6 948f7678 · revised 风险等级：high" [ref=e357] [cursor=pointer]:
+        - generic [ref=e358]:
+          - generic [ref=e359]: pending-project
+          - generic [ref=e360]: "3.6"
+        - paragraph [ref=e361]: 948f7678 · revised
+        - paragraph [ref=e362]: 风险等级：high
+      - button "pending-project 3.7 62afeddd · 未复核 风险等级：high" [ref=e363] [cursor=pointer]:
+        - generic [ref=e364]:
+          - generic [ref=e365]: pending-project
+          - generic [ref=e366]: "3.7"
+        - paragraph [ref=e367]: 62afeddd · 未复核
+        - paragraph [ref=e368]: 风险等级：high
+      - button "pending-project 1.4 22a764d9 · 未复核 风险等级：high" [ref=e369] [cursor=pointer]:
+        - generic [ref=e370]:
+          - generic [ref=e371]: pending-project
+          - generic [ref=e372]: "1.4"
+        - paragraph [ref=e373]: 22a764d9 · 未复核
+        - paragraph [ref=e374]: 风险等级：high
+      - button "pending-project 1.6 5a2c5d3d · 未复核 风险等级：high" [ref=e375] [cursor=pointer]:
+        - generic [ref=e376]:
+          - generic [ref=e377]: pending-project
+          - generic [ref=e378]: "1.6"
+        - paragraph [ref=e379]: 5a2c5d3d · 未复核
+        - paragraph [ref=e380]: 风险等级：high
+      - button "pending-project 1.4 a5df3f84 · 未复核 风险等级：high" [ref=e381] [cursor=pointer]:
+        - generic [ref=e382]:
+          - generic [ref=e383]: pending-project
+          - generic [ref=e384]: "1.4"
+        - paragraph [ref=e385]: a5df3f84 · 未复核
+        - paragraph [ref=e386]: 风险等级：high
+      - button "pending-project 1.6 9843e6a9 · 未复核 风险等级：high" [ref=e387] [cursor=pointer]:
+        - generic [ref=e388]:
+          - generic [ref=e389]: pending-project
+          - generic [ref=e390]: "1.6"
+        - paragraph [ref=e391]: 9843e6a9 · 未复核
+        - paragraph [ref=e392]: 风险等级：high
+      - button "nodejs -- e2d4e33c · 未复核 风险等级：未知" [ref=e393] [cursor=pointer]:
+        - generic [ref=e394]:
+          - generic [ref=e395]: nodejs
+          - generic [ref=e396]: "--"
+        - paragraph [ref=e397]: e2d4e33c · 未复核
+        - paragraph [ref=e398]: 风险等级：未知
+      - button "example -- 0edbfffa · 未复核 风险等级：未知" [ref=e399] [cursor=pointer]:
+        - generic [ref=e400]:
+          - generic [ref=e401]: example
+          - generic [ref=e402]: "--"
+        - paragraph [ref=e403]: 0edbfffa · 未复核
+        - paragraph [ref=e404]: 风险等级：未知
+  - generic [ref=e26]:
+    - generic [ref=e27]:
+      - generic [ref=e28]:
+        - paragraph [ref=e29]: Analysis Workspace
+        - heading "smoke create task" [level=2] [ref=e405]
+      - generic [ref=e31]:
+        - generic [ref=e32]:
+          - generic [ref=e33]: Final Score
+          - strong [ref=e34]: "--"
+        - generic [ref=e35]:
+          - generic [ref=e36]: Risk
+          - strong [ref=e37]: "--"
+        - generic [ref=e38]:
+          - generic [ref=e39]: Evidence
+          - strong [ref=e40]: "0"
+        - button "运行分析" [ref=e41] [cursor=pointer]
+        - button "采集公开页面" [ref=e42] [cursor=pointer]
+        - button "采集链上" [ref=e43] [cursor=pointer]
+        - button "采集 Telegram" [ref=e44] [cursor=pointer]
+        - button "采集 Discord" [ref=e45] [cursor=pointer]
+        - button "采集公开 Twitter" [ref=e46] [cursor=pointer]
+        - button "浏览器采集 Twitter" [ref=e47] [cursor=pointer]
+    - generic [ref=e48]:
+      - article [ref=e49]:
+        - generic [ref=e50]:
+          - heading "最终分析报告" [level=3] [ref=e51]
+          - generic [ref=e52]: 当前实时版
+        - paragraph [ref=e53]: 暂无报告。
+        - paragraph
+      - article [ref=e54]:
+        - generic [ref=e55]:
+          - heading "因子看板" [level=3] [ref=e56]
+          - generic [ref=e57]: 0 个因子
+      - article [ref=e58]:
+        - generic [ref=e59]:
+          - heading "来源列表" [level=3] [ref=e60]
+          - generic [ref=e61]: 1 个来源
+        - button "文档来源 https://docs.python.org/3/ 等待采集 | 证据 0 条 | 官方来源" [ref=e407] [cursor=pointer]:
+          - generic [ref=e408]: 文档来源
+          - strong [ref=e409]: https://docs.python.org/3/
+          - paragraph [ref=e410]: 等待采集 | 证据 0 条 | 官方来源
+      - article [ref=e62]:
+        - generic [ref=e63]:
+          - heading "来源详情" [level=3] [ref=e64]
+          - generic [ref=e65]: 等待采集
+        - paragraph [ref=e411]: https://docs.python.org/3/
+        - paragraph [ref=e413]: 这个来源暂时还没有挂上证据。
+      - article [ref=e67]:
+        - generic [ref=e68]:
+          - heading "因子详情" [level=3] [ref=e69]
+          - generic [ref=e70]: 未知
+        - paragraph [ref=e71]: 请选择一个因子查看详情。
+      - article [ref=e72]:
+        - generic [ref=e73]:
+          - heading "版本流转" [level=3] [ref=e74]
+          - generic [ref=e75]: 0 个版本
+        - generic [ref=e77]:
+          - heading "采集运行记录" [level=3] [ref=e78]
+          - generic [ref=e79]: 0 条

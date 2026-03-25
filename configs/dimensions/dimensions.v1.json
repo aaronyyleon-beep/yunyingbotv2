@@ -1,0 +1,41 @@
+{
+  "version": "v1",
+  "dimensions": [
+    {
+      "dimension_key": "product_maturity",
+      "dimension_name": "产品成熟度",
+      "score_scale": "1-10",
+      "aggregation_mode": "average"
+    },
+    {
+      "dimension_key": "community_user_health",
+      "dimension_name": "社区与用户健康度",
+      "score_scale": "1-10",
+      "aggregation_mode": "average"
+    },
+    {
+      "dimension_key": "bot_risk",
+      "dimension_name": "Bot 风险",
+      "score_scale": "1-10",
+      "aggregation_mode": "average"
+    },
+    {
+      "dimension_key": "growth_potential",
+      "dimension_name": "增长潜力",
+      "score_scale": "1-10",
+      "aggregation_mode": "average"
+    },
+    {
+      "dimension_key": "cross_validation",
+      "dimension_name": "交叉验证可信度",
+      "score_scale": "1-10",
+      "aggregation_mode": "average"
+    },
+    {
+      "dimension_key": "overall_risk",
+      "dimension_name": "综合风险等级",
+      "score_scale": "1-10",
+      "aggregation_mode": "average"
+    }
+  ]
+}

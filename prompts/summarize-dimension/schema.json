@@ -1,0 +1,13 @@
+{
+  "type": "object",
+  "properties": {
+    "dimension_key": { "type": "string" },
+    "dimension_score": { "type": "number" },
+    "dimension_summary": { "type": "string" },
+    "key_positive_factors": { "type": "array", "items": { "type": "string" } },
+    "key_negative_factors": { "type": "array", "items": { "type": "string" } },
+    "high_risk_points": { "type": "array", "items": { "type": "string" } },
+    "high_opportunity_points": { "type": "array", "items": { "type": "string" } }
+  },
+  "required": ["dimension_key", "dimension_score", "dimension_summary", "key_positive_factors", "key_negative_factors", "high_risk_points", "high_opportunity_points"]
+}

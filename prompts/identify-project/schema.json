@@ -1,0 +1,16 @@
+{
+  "type": "object",
+  "properties": {
+    "project_name": { "type": ["string", "null"] },
+    "project_aliases": { "type": "array", "items": { "type": "string" } },
+    "official_website": { "type": ["string", "null"] },
+    "official_twitter": { "type": ["string", "null"] },
+    "official_telegram": { "type": ["string", "null"] },
+    "official_discord": { "type": ["string", "null"] },
+    "docs_or_whitepaper": { "type": ["string", "null"] },
+    "contract_candidates": { "type": "array", "items": { "type": "string" } },
+    "confidence_level": { "type": "string" },
+    "uncertainties": { "type": "array", "items": { "type": "string" } }
+  },
+  "required": ["project_aliases", "contract_candidates", "confidence_level", "uncertainties"]
+}

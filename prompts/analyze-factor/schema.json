@@ -1,0 +1,14 @@
+{
+  "type": "object",
+  "properties": {
+    "factor_key": { "type": "string" },
+    "ai_score": { "type": "number" },
+    "score_reason": { "type": "string" },
+    "confidence_level": { "type": "string" },
+    "risk_points": { "type": "array", "items": { "type": "string" } },
+    "opportunity_points": { "type": "array", "items": { "type": "string" } },
+    "evidence_refs": { "type": "array", "items": { "type": "string" } },
+    "evidence_sufficiency": { "type": "string" }
+  },
+  "required": ["factor_key", "ai_score", "score_reason", "confidence_level", "risk_points", "opportunity_points", "evidence_refs", "evidence_sufficiency"]
+}

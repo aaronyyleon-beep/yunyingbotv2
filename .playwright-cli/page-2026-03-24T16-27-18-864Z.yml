@@ -1,0 +1,180 @@
+- generic [ref=e2]:
+  - generic:
+    - generic:
+      - generic [ref=e6]:
+        - generic [ref=e7]:
+          - generic [ref=e8]: 新鲜事一网打尽
+          - generic [ref=e9]: X 上的用户能够抢先知道。
+        - generic [ref=e12]:
+          - link "登录" [ref=e14] [cursor=pointer]:
+            - /url: /login
+            - generic [ref=e17]: 登录
+          - link "注册" [ref=e19] [cursor=pointer]:
+            - /url: /i/flow/signup
+            - generic [ref=e22]: 注册
+      - generic [ref=e23]:
+        - button "跳至主页时间线" [ref=e24] [cursor=pointer]
+        - button "跳至当前趋势" [ref=e26] [cursor=pointer]
+        - banner [ref=e28]:
+          - generic [ref=e31]:
+            - heading "X" [level=1] [ref=e33] [cursor=pointer]:
+              - link "X" [ref=e34]:
+                - /url: /
+                - img [ref=e36]
+            - generic:
+              - navigation "主要"
+        - main [ref=e39]:
+          - generic [ref=e42]:
+            - generic "主页时间线" [ref=e44]:
+              - generic [ref=e45]:
+                - generic [ref=e51] [cursor=pointer]:
+                  - button "返回" [ref=e53]:
+                    - img [ref=e55]
+                  - heading "帖子" [level=2] [ref=e60]
+                - generic:
+                  - generic:
+                    - status:
+                      - button:
+                        - generic:
+                          - img
+                          - generic: 查看新帖子
+              - region "对话" [ref=e62]:
+                - heading "对话" [level=1] [ref=e63]
+                - generic "时间线：对话" [ref=e64]:
+                  - article "枪十七 认证账号 @Juu17__ 军火和打仗，背后都是冰冷的生意 我小时候就总听长辈说，以前老江的侄子和其他太子党在江苏沿海贩军火 当时差点还被表哥带上船，不过现在军衔膨胀了，表哥都副师长好几年了，还是没升 去年6月我就知道今年初要打伊朗了 这倒不是我跳大神未卜先知 打仗备战本来就需要至少提前1年筹划，要打谁不打谁，那都是早就摆到领导人菜单上的 火箭炮车一个车轮就是300～500万白花花的银子，国防都能贪，死几个农民的儿子又算什么呢，路上撞死也才赔15万 人命这东西，不过是掌权者眼里的草芥罢了，放在哪个国家都一样，俄罗斯，美国，日本 我还知道中国啥时候打台湾呢 图像 40 回复、11 次转帖、204 喜欢、136 书签、123168 次观看" [ref=e69]:
+                    - generic [ref=e71]:
+                      - generic [ref=e75]:
+                        - link [active] [ref=e87] [cursor=pointer]:
+                          - /url: /Juu17__
+                        - generic [ref=e92]:
+                          - generic [ref=e95]:
+                            - link "枪十七 认证账号" [ref=e98] [cursor=pointer]:
+                              - /url: /Juu17__
+                              - generic [ref=e99]:
+                                - generic [ref=e101]: 枪十七
+                                - img "认证账号" [ref=e104]
+                            - link "@Juu17__" [ref=e110] [cursor=pointer]:
+                              - /url: /Juu17__
+                              - generic [ref=e111]: "@Juu17__"
+                          - button "更多" [ref=e117] [cursor=pointer]:
+                            - img [ref=e121]
+                      - generic [ref=e124]:
+                        - generic [ref=e126]: 军火和打仗，背后都是冰冷的生意 我小时候就总听长辈说，以前老江的侄子和其他太子党在江苏沿海贩军火 当时差点还被表哥带上船，不过现在军衔膨胀了，表哥都副师长好几年了，还是没升 去年6月我就知道今年初要打伊朗了 这倒不是我跳大神未卜先知 打仗备战本来就需要至少提前1年筹划，要打谁不打谁，那都是早就摆到领导人菜单上的 火箭炮车一个车轮就是300～500万白花花的银子，国防都能贪，死几个农民的儿子又算什么呢，路上撞死也才赔15万 人命这东西，不过是掌权者眼里的草芥罢了，放在哪个国家都一样，俄罗斯，美国，日本 我还知道中国啥时候打台湾呢
+                        - link "图像" [ref=e134] [cursor=pointer]:
+                          - /url: /Juu17__/status/2035482364042994002/photo/1
+                          - generic "图像" [ref=e138]:
+                            - img "图像" [ref=e140]
+                        - generic [ref=e144]:
+                          - link "上午6:23 · 2026年3月22日" [ref=e146] [cursor=pointer]:
+                            - /url: /Juu17__/status/2035482364042994002
+                            - time [ref=e147]: 上午6:23 · 2026年3月22日
+                          - generic [ref=e148]: ·
+                          - link "12.3万 查看" [ref=e149] [cursor=pointer]:
+                            - /url: /Juu17__/status/2035482364042994002/analytics
+                            - generic [ref=e152]: 12.3万
+                            - generic [ref=e153]: 查看
+                        - group "40 回复、11 次转帖、204 喜欢、136 书签、123168 次观看" [ref=e156]:
+                          - button "40 回复。回复" [ref=e158] [cursor=pointer]:
+                            - generic [ref=e159]:
+                              - img [ref=e162]
+                              - generic [ref=e167]: "40"
+                          - button "11 次转帖。转帖" [ref=e169] [cursor=pointer]:
+                            - generic [ref=e170]:
+                              - img [ref=e173]
+                              - generic [ref=e178]: "11"
+                          - button "204 喜欢次数。喜欢" [ref=e180] [cursor=pointer]:
+                            - generic [ref=e181]:
+                              - img [ref=e184]
+                              - generic [ref=e189]: "204"
+                          - button "136 书签。加入书签" [ref=e191] [cursor=pointer]:
+                            - generic [ref=e192]:
+                              - img [ref=e195]
+                              - generic [ref=e200]: "136"
+                          - button "分享帖子" [ref=e203] [cursor=pointer]:
+                            - img [ref=e207]
+                        - button "查看 40 条回复" [ref=e210] [cursor=pointer]:
+                          - generic [ref=e211]:
+                            - img [ref=e212]
+                            - generic [ref=e216]: 查看 40 条回复
+            - generic "当前趋势" [ref=e224]:
+              - generic [ref=e225]:
+                - region "注册" [ref=e227]:
+                  - heading "X 的新用户？" [level=2] [ref=e229]:
+                    - generic [ref=e230]: X 的新用户？
+                  - generic [ref=e231]: 立即注册，获取你自己的个性化时间线！
+                  - generic [ref=e232]:
+                    - generic [ref=e234]:
+                      - button "使用 Google 账号注册。在新标签页中打开" [ref=e236] [cursor=pointer]:
+                        - generic [ref=e238]:
+                          - img [ref=e240]
+                          - generic [ref=e247]: 使用 Google 账号注册
+                      - iframe
+                    - button "使用 Apple 注册" [ref=e248] [cursor=pointer]:
+                      - generic [ref=e249]:
+                        - img [ref=e250]
+                        - generic [ref=e254]: 使用 Apple 注册
+                    - link "创建账号" [ref=e255] [cursor=pointer]:
+                      - /url: /i/flow/signup
+                      - generic [ref=e258]: 创建账号
+                  - generic [ref=e259]:
+                    - text: 注册即表示同意
+                    - link "服务条款" [ref=e260] [cursor=pointer]:
+                      - /url: https://x.com/tos
+                    - text: 及
+                    - link "隐私政策" [ref=e261] [cursor=pointer]:
+                      - /url: https://x.com/privacy
+                    - text: ，其中包括
+                    - link "Cookie 使用条款" [ref=e262] [cursor=pointer]:
+                      - /url: https://help.x.com/rules-and-policies/twitter-cookies
+                    - text: 。
+                - region "当前趋势" [ref=e265]:
+                  - heading "当前趋势" [level=1] [ref=e266]
+                  - generic "时间线：当前趋势" [ref=e267]:
+                    - generic [ref=e268]:
+                      - heading "有什么新鲜事" [level=2] [ref=e272]:
+                        - generic [ref=e273]: 有什么新鲜事
+                      - 'link "全球趋势 #ときのそら生放送" [ref=e276] [cursor=pointer]':
+                        - generic [ref=e277]:
+                          - generic [ref=e279]: 全球趋势
+                          - generic [ref=e281]: "#ときのそら生放送"
+                      - link "全球趋势 杏樹さん" [ref=e284] [cursor=pointer]:
+                        - generic [ref=e285]:
+                          - generic [ref=e287]: 全球趋势
+                          - generic [ref=e288]: 杏樹さん
+                      - 'link "全球趋势 #ااعلان_ترند1_O56З2б8б79" [ref=e291] [cursor=pointer]':
+                        - generic [ref=e292]:
+                          - generic [ref=e294]: 全球趋势
+                          - generic [ref=e296]: "#ااعلان_ترند1_O56З2б8б79"
+                      - 'link "全球趋势 #cosd" [ref=e299] [cursor=pointer]':
+                        - generic [ref=e300]:
+                          - generic [ref=e302]: 全球趋势
+                          - generic [ref=e304]: "#cosd"
+                      - link "显示更多" [ref=e307] [cursor=pointer]:
+                        - /url: /explore/tabs/for-you
+                        - generic [ref=e308]: 显示更多
+                - navigation "页脚" [ref=e310]:
+                  - generic [ref=e311]:
+                    - link "服务条款" [ref=e312] [cursor=pointer]:
+                      - /url: https://x.com/tos
+                    - generic [ref=e313]: "|"
+                  - generic [ref=e314]:
+                    - link "隐私政策" [ref=e315] [cursor=pointer]:
+                      - /url: https://x.com/privacy
+                    - generic [ref=e316]: "|"
+                  - generic [ref=e317]:
+                    - link "Cookie 政策" [ref=e318] [cursor=pointer]:
+                      - /url: https://support.x.com/articles/20170514
+                    - generic [ref=e319]: "|"
+                  - generic [ref=e320]:
+                    - link "辅助功能" [ref=e321] [cursor=pointer]:
+                      - /url: https://help.x.com/resources/accessibility
+                    - generic [ref=e322]: "|"
+                  - generic [ref=e323]:
+                    - link "广告信息" [ref=e324] [cursor=pointer]:
+                      - /url: https://business.x.com/en/help/troubleshooting/how-twitter-ads-work.html?ref=web-twc-ao-gbl-adsinfo&utm_source=twc&utm_medium=web&utm_campaign=ao&utm_content=adsinfo
+                    - generic [ref=e325]: "|"
+                  - button "更多" [ref=e326] [cursor=pointer]:
+                    - generic [ref=e327]:
+                      - text: 更多
+                      - img [ref=e328]
+                  - generic [ref=e331]: © 2026 X Corp.

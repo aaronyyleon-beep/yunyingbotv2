@@ -1,0 +1,12 @@
+{
+  "type": "object",
+  "properties": {
+    "project_snapshot": { "type": "string" },
+    "source_map_summary": { "type": "array", "items": { "type": "string" } },
+    "key_entities": { "type": "array", "items": { "type": "string" } },
+    "initial_findings": { "type": "array", "items": { "type": "string" } },
+    "evidence_gaps": { "type": "array", "items": { "type": "string" } },
+    "next_collection_targets": { "type": "array", "items": { "type": "string" } }
+  },
+  "required": ["project_snapshot", "source_map_summary", "initial_findings", "evidence_gaps", "next_collection_targets"]
+}

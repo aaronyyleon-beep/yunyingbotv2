@@ -1,0 +1,20 @@
+{
+  "version": "v1",
+  "workflow_key": "analysis_mvp",
+  "stages": [
+    "intake",
+    "identify_project",
+    "collect_global",
+    "collect_targeted",
+    "build_evidence_pool",
+    "analyze_factors",
+    "aggregate_dimensions",
+    "generate_report",
+    "human_review",
+    "recalculate_and_version"
+  ],
+  "stopping_rules": {
+    "max_collection_rounds": 2,
+    "stop_when_core_factors_have_evidence": true
+  }
+}

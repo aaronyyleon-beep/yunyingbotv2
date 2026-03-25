@@ -1,0 +1,523 @@
+- main [ref=e837]:
+  - generic [ref=e838]:
+    - generic [ref=e839]:
+      - paragraph [ref=e840]: Intelligence Console
+      - heading "Task Grid" [level=1] [ref=e841]
+    - generic [ref=e842]:
+      - paragraph [ref=e843]: New Intake
+      - generic [ref=e844]:
+        - generic [ref=e845]: Website
+        - textbox "Website" [ref=e846]: https://docs.python.org/3/
+      - generic [ref=e847]:
+        - generic [ref=e848]: Docs / Whitepaper
+        - textbox "Docs / Whitepaper" [ref=e849]: https://nodejs.org/api/documentation.html
+      - generic [ref=e850]:
+        - generic [ref=e851]: Twitter / X
+        - textbox "Twitter / X" [ref=e852]: https://twitter.com/OpenAI/status/1900000000000000001
+      - generic [ref=e853]:
+        - generic [ref=e854]: Telegram
+        - textbox "Telegram" [ref=e855]
+      - generic [ref=e856]:
+        - generic [ref=e857]: Discord
+        - textbox "Discord" [ref=e858]
+      - generic [ref=e859]:
+        - generic [ref=e860]: Contract
+        - textbox "Contract" [ref=e861]
+      - generic [ref=e862]:
+        - generic [ref=e863]: Notes
+        - textbox "Notes" [ref=e864]: new task from web intake
+      - button "创建任务" [ref=e865] [cursor=pointer]
+    - generic [ref=e866]:
+      - button "beatswap -- 删除 a7847a05 · 未复核 风险等级：未知" [ref=e867] [cursor=pointer]:
+        - generic [ref=e868]:
+          - generic [ref=e869]: beatswap
+          - generic [ref=e870]:
+            - generic [ref=e871]: "--"
+            - button "删除" [ref=e872]
+        - paragraph [ref=e873]: a7847a05 · 未复核
+        - paragraph [ref=e874]: 风险等级：未知
+      - button "beatswap -- 删除 2ad31ab3 · 未复核 风险等级：未知" [ref=e875] [cursor=pointer]:
+        - generic [ref=e876]:
+          - generic [ref=e877]: beatswap
+          - generic [ref=e878]:
+            - generic [ref=e879]: "--"
+            - button "删除" [ref=e880]
+        - paragraph [ref=e881]: 2ad31ab3 · 未复核
+        - paragraph [ref=e882]: 风险等级：未知
+      - button "unknown-project -- 删除 dd2115e1 · 未复核 风险等级：未知" [ref=e883] [cursor=pointer]:
+        - generic [ref=e884]:
+          - generic [ref=e885]: unknown-project
+          - generic [ref=e886]:
+            - generic [ref=e887]: "--"
+            - button "删除" [ref=e888]
+        - paragraph [ref=e889]: dd2115e1 · 未复核
+        - paragraph [ref=e890]: 风险等级：未知
+      - button "unknown-project -- 删除 5264ccea · 未复核 风险等级：未知" [ref=e891] [cursor=pointer]:
+        - generic [ref=e892]:
+          - generic [ref=e893]: unknown-project
+          - generic [ref=e894]:
+            - generic [ref=e895]: "--"
+            - button "删除" [ref=e896]
+        - paragraph [ref=e897]: 5264ccea · 未复核
+        - paragraph [ref=e898]: 风险等级：未知
+      - button "unknown-project -- 删除 86015c74 · 未复核 风险等级：未知" [ref=e899] [cursor=pointer]:
+        - generic [ref=e900]:
+          - generic [ref=e901]: unknown-project
+          - generic [ref=e902]:
+            - generic [ref=e903]: "--"
+            - button "删除" [ref=e904]
+        - paragraph [ref=e905]: 86015c74 · 未复核
+        - paragraph [ref=e906]: 风险等级：未知
+      - button "unknown-project -- 删除 f5daf4f4 · 未复核 风险等级：未知" [ref=e907] [cursor=pointer]:
+        - generic [ref=e908]:
+          - generic [ref=e909]: unknown-project
+          - generic [ref=e910]:
+            - generic [ref=e911]: "--"
+            - button "删除" [ref=e912]
+        - paragraph [ref=e913]: f5daf4f4 · 未复核
+        - paragraph [ref=e914]: 风险等级：未知
+      - button "unknown-project -- 删除 0056c901 · 未复核 风险等级：未知" [ref=e915] [cursor=pointer]:
+        - generic [ref=e916]:
+          - generic [ref=e917]: unknown-project
+          - generic [ref=e918]:
+            - generic [ref=e919]: "--"
+            - button "删除" [ref=e920]
+        - paragraph [ref=e921]: 0056c901 · 未复核
+        - paragraph [ref=e922]: 风险等级：未知
+      - button "discord factor check -- 删除 9082e765 · 未复核 风险等级：未知" [ref=e923] [cursor=pointer]:
+        - generic [ref=e924]:
+          - generic [ref=e925]: discord factor check
+          - generic [ref=e926]:
+            - generic [ref=e927]: "--"
+            - button "删除" [ref=e928]
+        - paragraph [ref=e929]: 9082e765 · 未复核
+        - paragraph [ref=e930]: 风险等级：未知
+      - button "discord smoke test -- 删除 df5fea04 · 未复核 风险等级：未知" [ref=e931] [cursor=pointer]:
+        - generic [ref=e932]:
+          - generic [ref=e933]: discord smoke test
+          - generic [ref=e934]:
+            - generic [ref=e935]: "--"
+            - button "删除" [ref=e936]
+        - paragraph [ref=e937]: df5fea04 · 未复核
+        - paragraph [ref=e938]: 风险等级：未知
+      - button "telegram factor smoke -- 删除 34a2e58e · 未复核 风险等级：未知" [ref=e939] [cursor=pointer]:
+        - generic [ref=e940]:
+          - generic [ref=e941]: telegram factor smoke
+          - generic [ref=e942]:
+            - generic [ref=e943]: "--"
+            - button "删除" [ref=e944]
+        - paragraph [ref=e945]: 34a2e58e · 未复核
+        - paragraph [ref=e946]: 风险等级：未知
+      - button "telegram factor smoke -- 删除 4c03e44f · 未复核 风险等级：未知" [ref=e947] [cursor=pointer]:
+        - generic [ref=e948]:
+          - generic [ref=e949]: telegram factor smoke
+          - generic [ref=e950]:
+            - generic [ref=e951]: "--"
+            - button "删除" [ref=e952]
+        - paragraph [ref=e953]: 4c03e44f · 未复核
+        - paragraph [ref=e954]: 风险等级：未知
+      - button "telegram buffer smoke -- 删除 586d2f78 · 未复核 风险等级：未知" [ref=e955] [cursor=pointer]:
+        - generic [ref=e956]:
+          - generic [ref=e957]: telegram buffer smoke
+          - generic [ref=e958]:
+            - generic [ref=e959]: "--"
+            - button "删除" [ref=e960]
+        - paragraph [ref=e961]: 586d2f78 · 未复核
+        - paragraph [ref=e962]: 风险等级：未知
+      - button "telegram buffer smoke -- 删除 954f46f1 · 未复核 风险等级：未知" [ref=e963] [cursor=pointer]:
+        - generic [ref=e964]:
+          - generic [ref=e965]: telegram buffer smoke
+          - generic [ref=e966]:
+            - generic [ref=e967]: "--"
+            - button "删除" [ref=e968]
+        - paragraph [ref=e969]: 954f46f1 · 未复核
+        - paragraph [ref=e970]: 风险等级：未知
+      - button "telegram smoke test -- 删除 7b1c49c3 · 未复核 风险等级：未知" [ref=e971] [cursor=pointer]:
+        - generic [ref=e972]:
+          - generic [ref=e973]: telegram smoke test
+          - generic [ref=e974]:
+            - generic [ref=e975]: "--"
+            - button "删除" [ref=e976]
+        - paragraph [ref=e977]: 7b1c49c3 · 未复核
+        - paragraph [ref=e978]: 风险等级：未知
+      - button "community evidence smoke -- 删除 61983d15 · 未复核 风险等级：未知" [ref=e979] [cursor=pointer]:
+        - generic [ref=e980]:
+          - generic [ref=e981]: community evidence smoke
+          - generic [ref=e982]:
+            - generic [ref=e983]: "--"
+            - button "删除" [ref=e984]
+        - paragraph [ref=e985]: 61983d15 · 未复核
+        - paragraph [ref=e986]: 风险等级：未知
+      - button "community intake test -- 删除 423286bf · 未复核 风险等级：未知" [ref=e987] [cursor=pointer]:
+        - generic [ref=e988]:
+          - generic [ref=e989]: community intake test
+          - generic [ref=e990]:
+            - generic [ref=e991]: "--"
+            - button "删除" [ref=e992]
+        - paragraph [ref=e993]: 423286bf · 未复核
+        - paragraph [ref=e994]: 风险等级：未知
+      - button "Juu17__ -- 删除 3a71e5bd · 未复核 风险等级：未知" [ref=e995] [cursor=pointer]:
+        - generic [ref=e996]:
+          - generic [ref=e997]: Juu17__
+          - generic [ref=e998]:
+            - generic [ref=e999]: "--"
+            - button "删除" [ref=e1000]
+        - paragraph [ref=e1001]: 3a71e5bd · 未复核
+        - paragraph [ref=e1002]: 风险等级：未知
+      - button "Juu17__ -- 删除 cfd5a190 · 未复核 风险等级：未知" [ref=e1003] [cursor=pointer]:
+        - generic [ref=e1004]:
+          - generic [ref=e1005]: Juu17__
+          - generic [ref=e1006]:
+            - generic [ref=e1007]: "--"
+            - button "删除" [ref=e1008]
+        - paragraph [ref=e1009]: cfd5a190 · 未复核
+        - paragraph [ref=e1010]: 风险等级：未知
+      - button "Juu17__ -- 删除 8080b18a · 未复核 风险等级：未知" [ref=e1011] [cursor=pointer]:
+        - generic [ref=e1012]:
+          - generic [ref=e1013]: Juu17__
+          - generic [ref=e1014]:
+            - generic [ref=e1015]: "--"
+            - button "删除" [ref=e1016]
+        - paragraph [ref=e1017]: 8080b18a · 未复核
+        - paragraph [ref=e1018]: 风险等级：未知
+      - button "Juu17__ -- 删除 2e979825 · 未复核 风险等级：未知" [ref=e1019] [cursor=pointer]:
+        - generic [ref=e1020]:
+          - generic [ref=e1021]: Juu17__
+          - generic [ref=e1022]:
+            - generic [ref=e1023]: "--"
+            - button "删除" [ref=e1024]
+        - paragraph [ref=e1025]: 2e979825 · 未复核
+        - paragraph [ref=e1026]: 风险等级：未知
+      - button "Juu17__ -- 删除 cb1b5012 · 未复核 风险等级：未知" [ref=e1027] [cursor=pointer]:
+        - generic [ref=e1028]:
+          - generic [ref=e1029]: Juu17__
+          - generic [ref=e1030]:
+            - generic [ref=e1031]: "--"
+            - button "删除" [ref=e1032]
+        - paragraph [ref=e1033]: cb1b5012 · 未复核
+        - paragraph [ref=e1034]: 风险等级：未知
+      - button "Juu17__ -- 删除 890556ac · 未复核 风险等级：未知" [ref=e1035] [cursor=pointer]:
+        - generic [ref=e1036]:
+          - generic [ref=e1037]: Juu17__
+          - generic [ref=e1038]:
+            - generic [ref=e1039]: "--"
+            - button "删除" [ref=e1040]
+        - paragraph [ref=e1041]: 890556ac · 未复核
+        - paragraph [ref=e1042]: 风险等级：未知
+      - button "Juu17__ -- 删除 20377b43 · 未复核 风险等级：未知" [ref=e1043] [cursor=pointer]:
+        - generic [ref=e1044]:
+          - generic [ref=e1045]: Juu17__
+          - generic [ref=e1046]:
+            - generic [ref=e1047]: "--"
+            - button "删除" [ref=e1048]
+        - paragraph [ref=e1049]: 20377b43 · 未复核
+        - paragraph [ref=e1050]: 风险等级：未知
+      - button "Juu17__ -- 删除 d8b1bf33 · 未复核 风险等级：未知" [ref=e1051] [cursor=pointer]:
+        - generic [ref=e1052]:
+          - generic [ref=e1053]: Juu17__
+          - generic [ref=e1054]:
+            - generic [ref=e1055]: "--"
+            - button "删除" [ref=e1056]
+        - paragraph [ref=e1057]: d8b1bf33 · 未复核
+        - paragraph [ref=e1058]: 风险等级：未知
+      - button "Juu17__ -- 删除 b4bd1b05 · 未复核 风险等级：未知" [ref=e1059] [cursor=pointer]:
+        - generic [ref=e1060]:
+          - generic [ref=e1061]: Juu17__
+          - generic [ref=e1062]:
+            - generic [ref=e1063]: "--"
+            - button "删除" [ref=e1064]
+        - paragraph [ref=e1065]: b4bd1b05 · 未复核
+        - paragraph [ref=e1066]: 风险等级：未知
+      - button "Juu17__ -- 删除 4b08840d · 未复核 风险等级：未知" [ref=e1067] [cursor=pointer]:
+        - generic [ref=e1068]:
+          - generic [ref=e1069]: Juu17__
+          - generic [ref=e1070]:
+            - generic [ref=e1071]: "--"
+            - button "删除" [ref=e1072]
+        - paragraph [ref=e1073]: 4b08840d · 未复核
+        - paragraph [ref=e1074]: 风险等级：未知
+      - button "Juu17__ -- 删除 c6f9a74d · 未复核 风险等级：未知" [ref=e1075] [cursor=pointer]:
+        - generic [ref=e1076]:
+          - generic [ref=e1077]: Juu17__
+          - generic [ref=e1078]:
+            - generic [ref=e1079]: "--"
+            - button "删除" [ref=e1080]
+        - paragraph [ref=e1081]: c6f9a74d · 未复核
+        - paragraph [ref=e1082]: 风险等级：未知
+      - button "Juu17__ -- 删除 88102c60 · 未复核 风险等级：未知" [ref=e1083] [cursor=pointer]:
+        - generic [ref=e1084]:
+          - generic [ref=e1085]: Juu17__
+          - generic [ref=e1086]:
+            - generic [ref=e1087]: "--"
+            - button "删除" [ref=e1088]
+        - paragraph [ref=e1089]: 88102c60 · 未复核
+        - paragraph [ref=e1090]: 风险等级：未知
+      - button "Juu17__ -- 删除 f8642f23 · 未复核 风险等级：未知" [ref=e1091] [cursor=pointer]:
+        - generic [ref=e1092]:
+          - generic [ref=e1093]: Juu17__
+          - generic [ref=e1094]:
+            - generic [ref=e1095]: "--"
+            - button "删除" [ref=e1096]
+        - paragraph [ref=e1097]: f8642f23 · 未复核
+        - paragraph [ref=e1098]: 风险等级：未知
+      - button "Juu17__ -- 删除 acb6608f · 未复核 风险等级：未知" [ref=e1099] [cursor=pointer]:
+        - generic [ref=e1100]:
+          - generic [ref=e1101]: Juu17__
+          - generic [ref=e1102]:
+            - generic [ref=e1103]: "--"
+            - button "删除" [ref=e1104]
+        - paragraph [ref=e1105]: acb6608f · 未复核
+        - paragraph [ref=e1106]: 风险等级：未知
+      - button "Juu17__ -- 删除 28d16514 · 未复核 风险等级：未知" [ref=e1107] [cursor=pointer]:
+        - generic [ref=e1108]:
+          - generic [ref=e1109]: Juu17__
+          - generic [ref=e1110]:
+            - generic [ref=e1111]: "--"
+            - button "删除" [ref=e1112]
+        - paragraph [ref=e1113]: 28d16514 · 未复核
+        - paragraph [ref=e1114]: 风险等级：未知
+      - button "Juu17__ -- 删除 3b272fdd · 未复核 风险等级：未知" [ref=e1115] [cursor=pointer]:
+        - generic [ref=e1116]:
+          - generic [ref=e1117]: Juu17__
+          - generic [ref=e1118]:
+            - generic [ref=e1119]: "--"
+            - button "删除" [ref=e1120]
+        - paragraph [ref=e1121]: 3b272fdd · 未复核
+        - paragraph [ref=e1122]: 风险等级：未知
+      - button "OpenAI -- 删除 c00e19b6 · 未复核 风险等级：未知" [ref=e1123] [cursor=pointer]:
+        - generic [ref=e1124]:
+          - generic [ref=e1125]: OpenAI
+          - generic [ref=e1126]:
+            - generic [ref=e1127]: "--"
+            - button "删除" [ref=e1128]
+        - paragraph [ref=e1129]: c00e19b6 · 未复核
+        - paragraph [ref=e1130]: 风险等级：未知
+      - button "OpenAI -- 删除 45a1319b · 未复核 风险等级：未知" [ref=e1131] [cursor=pointer]:
+        - generic [ref=e1132]:
+          - generic [ref=e1133]: OpenAI
+          - generic [ref=e1134]:
+            - generic [ref=e1135]: "--"
+            - button "删除" [ref=e1136]
+        - paragraph [ref=e1137]: 45a1319b · 未复核
+        - paragraph [ref=e1138]: 风险等级：未知
+      - button "OpenAI -- 删除 2ab29188 · 未复核 风险等级：未知" [ref=e1139] [cursor=pointer]:
+        - generic [ref=e1140]:
+          - generic [ref=e1141]: OpenAI
+          - generic [ref=e1142]:
+            - generic [ref=e1143]: "--"
+            - button "删除" [ref=e1144]
+        - paragraph [ref=e1145]: 2ab29188 · 未复核
+        - paragraph [ref=e1146]: 风险等级：未知
+      - button "pending-project -- 删除 b5cf20c1 · 未复核 风险等级：未知" [ref=e1147] [cursor=pointer]:
+        - generic [ref=e1148]:
+          - generic [ref=e1149]: pending-project
+          - generic [ref=e1150]:
+            - generic [ref=e1151]: "--"
+            - button "删除" [ref=e1152]
+        - paragraph [ref=e1153]: b5cf20c1 · 未复核
+        - paragraph [ref=e1154]: 风险等级：未知
+      - button "pending-project -- 删除 f23c648b · 未复核 风险等级：未知" [ref=e1155] [cursor=pointer]:
+        - generic [ref=e1156]:
+          - generic [ref=e1157]: pending-project
+          - generic [ref=e1158]:
+            - generic [ref=e1159]: "--"
+            - button "删除" [ref=e1160]
+        - paragraph [ref=e1161]: f23c648b · 未复核
+        - paragraph [ref=e1162]: 风险等级：未知
+      - button "OpenAI -- 删除 86edaf2f · 未复核 风险等级：未知" [ref=e1163] [cursor=pointer]:
+        - generic [ref=e1164]:
+          - generic [ref=e1165]: OpenAI
+          - generic [ref=e1166]:
+            - generic [ref=e1167]: "--"
+            - button "删除" [ref=e1168]
+        - paragraph [ref=e1169]: 86edaf2f · 未复核
+        - paragraph [ref=e1170]: 风险等级：未知
+      - button "pending-project -- 删除 78b7a0d2 · 未复核 风险等级：未知" [ref=e1171] [cursor=pointer]:
+        - generic [ref=e1172]:
+          - generic [ref=e1173]: pending-project
+          - generic [ref=e1174]:
+            - generic [ref=e1175]: "--"
+            - button "删除" [ref=e1176]
+        - paragraph [ref=e1177]: 78b7a0d2 · 未复核
+        - paragraph [ref=e1178]: 风险等级：未知
+      - button "1760331900845734278 -- 删除 fcb83059 · 未复核 风险等级：未知" [ref=e1179] [cursor=pointer]:
+        - generic [ref=e1180]:
+          - generic [ref=e1181]: "1760331900845734278"
+          - generic [ref=e1182]:
+            - generic [ref=e1183]: "--"
+            - button "删除" [ref=e1184]
+        - paragraph [ref=e1185]: fcb83059 · 未复核
+        - paragraph [ref=e1186]: 风险等级：未知
+      - button "pending-project -- 删除 75afb4bb · 未复核 风险等级：未知" [ref=e1187] [cursor=pointer]:
+        - generic [ref=e1188]:
+          - generic [ref=e1189]: pending-project
+          - generic [ref=e1190]:
+            - generic [ref=e1191]: "--"
+            - button "删除" [ref=e1192]
+        - paragraph [ref=e1193]: 75afb4bb · 未复核
+        - paragraph [ref=e1194]: 风险等级：未知
+      - button "pending-project -- 删除 7350a863 · 未复核 风险等级：未知" [ref=e1195] [cursor=pointer]:
+        - generic [ref=e1196]:
+          - generic [ref=e1197]: pending-project
+          - generic [ref=e1198]:
+            - generic [ref=e1199]: "--"
+            - button "删除" [ref=e1200]
+        - paragraph [ref=e1201]: 7350a863 · 未复核
+        - paragraph [ref=e1202]: 风险等级：未知
+      - button "pending-project 3.4 删除 e746a4f1 · revised 风险等级：high" [ref=e1203] [cursor=pointer]:
+        - generic [ref=e1204]:
+          - generic [ref=e1205]: pending-project
+          - generic [ref=e1206]:
+            - generic [ref=e1207]: "3.4"
+            - button "删除" [ref=e1208]
+        - paragraph [ref=e1209]: e746a4f1 · revised
+        - paragraph [ref=e1210]: 风险等级：high
+      - button "pending-project 3.6 删除 948f7678 · revised 风险等级：high" [ref=e1211] [cursor=pointer]:
+        - generic [ref=e1212]:
+          - generic [ref=e1213]: pending-project
+          - generic [ref=e1214]:
+            - generic [ref=e1215]: "3.6"
+            - button "删除" [ref=e1216]
+        - paragraph [ref=e1217]: 948f7678 · revised
+        - paragraph [ref=e1218]: 风险等级：high
+      - button "pending-project 3.7 删除 62afeddd · 未复核 风险等级：high" [ref=e1219] [cursor=pointer]:
+        - generic [ref=e1220]:
+          - generic [ref=e1221]: pending-project
+          - generic [ref=e1222]:
+            - generic [ref=e1223]: "3.7"
+            - button "删除" [ref=e1224]
+        - paragraph [ref=e1225]: 62afeddd · 未复核
+        - paragraph [ref=e1226]: 风险等级：high
+      - button "pending-project 1.4 删除 22a764d9 · 未复核 风险等级：high" [ref=e1227] [cursor=pointer]:
+        - generic [ref=e1228]:
+          - generic [ref=e1229]: pending-project
+          - generic [ref=e1230]:
+            - generic [ref=e1231]: "1.4"
+            - button "删除" [ref=e1232]
+        - paragraph [ref=e1233]: 22a764d9 · 未复核
+        - paragraph [ref=e1234]: 风险等级：high
+      - button "pending-project 1.6 删除 5a2c5d3d · 未复核 风险等级：high" [ref=e1235] [cursor=pointer]:
+        - generic [ref=e1236]:
+          - generic [ref=e1237]: pending-project
+          - generic [ref=e1238]:
+            - generic [ref=e1239]: "1.6"
+            - button "删除" [ref=e1240]
+        - paragraph [ref=e1241]: 5a2c5d3d · 未复核
+        - paragraph [ref=e1242]: 风险等级：high
+      - button "pending-project 1.4 删除 a5df3f84 · 未复核 风险等级：high" [ref=e1243] [cursor=pointer]:
+        - generic [ref=e1244]:
+          - generic [ref=e1245]: pending-project
+          - generic [ref=e1246]:
+            - generic [ref=e1247]: "1.4"
+            - button "删除" [ref=e1248]
+        - paragraph [ref=e1249]: a5df3f84 · 未复核
+        - paragraph [ref=e1250]: 风险等级：high
+      - button "pending-project 1.6 删除 9843e6a9 · 未复核 风险等级：high" [ref=e1251] [cursor=pointer]:
+        - generic [ref=e1252]:
+          - generic [ref=e1253]: pending-project
+          - generic [ref=e1254]:
+            - generic [ref=e1255]: "1.6"
+            - button "删除" [ref=e1256]
+        - paragraph [ref=e1257]: 9843e6a9 · 未复核
+        - paragraph [ref=e1258]: 风险等级：high
+      - button "nodejs -- 删除 e2d4e33c · 未复核 风险等级：未知" [ref=e1259] [cursor=pointer]:
+        - generic [ref=e1260]:
+          - generic [ref=e1261]: nodejs
+          - generic [ref=e1262]:
+            - generic [ref=e1263]: "--"
+            - button "删除" [ref=e1264]
+        - paragraph [ref=e1265]: e2d4e33c · 未复核
+        - paragraph [ref=e1266]: 风险等级：未知
+      - button "example -- 删除 0edbfffa · 未复核 风险等级：未知" [ref=e1267] [cursor=pointer]:
+        - generic [ref=e1268]:
+          - generic [ref=e1269]: example
+          - generic [ref=e1270]:
+            - generic [ref=e1271]: "--"
+            - button "删除" [ref=e1272]
+        - paragraph [ref=e1273]: 0edbfffa · 未复核
+        - paragraph [ref=e1274]: 风险等级：未知
+  - generic [ref=e1275]:
+    - generic [ref=e1276]:
+      - generic [ref=e1277]:
+        - paragraph [ref=e1278]: Analysis Workspace
+        - heading "beatswap" [level=2] [ref=e1279]
+      - generic [ref=e1280]:
+        - generic [ref=e1281]:
+          - generic [ref=e1282]: Final Score
+          - strong [ref=e1283]: "--"
+        - generic [ref=e1284]:
+          - generic [ref=e1285]: Risk
+          - strong [ref=e1286]: "--"
+        - generic [ref=e1287]:
+          - generic [ref=e1288]: Evidence
+          - strong [ref=e1289]: "2"
+        - button "运行分析" [ref=e1290] [cursor=pointer]
+        - button "采集公开页面" [ref=e1291] [cursor=pointer]
+        - button "采集链上" [ref=e1292] [cursor=pointer]
+        - button "采集 Telegram" [ref=e1293] [cursor=pointer]
+        - button "采集 Discord" [ref=e1294] [cursor=pointer]
+        - button "采集公开 Twitter" [ref=e1295] [cursor=pointer]
+        - button "浏览器采集 Twitter" [ref=e1296] [cursor=pointer]
+    - generic [ref=e1297]:
+      - article [ref=e1298]:
+        - generic [ref=e1299]:
+          - heading "最终分析报告" [level=3] [ref=e1300]
+          - generic [ref=e1301]: 当前实时版
+        - paragraph [ref=e1302]: 暂无报告。
+        - paragraph
+      - article [ref=e1303]:
+        - generic [ref=e1304]:
+          - heading "因子看板" [level=3] [ref=e1305]
+          - generic [ref=e1306]: 0 个因子
+      - article [ref=e1307]:
+        - generic [ref=e1308]:
+          - heading "来源列表" [level=3] [ref=e1309]
+          - generic [ref=e1310]: 4 个来源
+        - generic [ref=e1311]:
+          - button "官网来源 https://beatswap.net/ 采集完成 | 证据 1 条 | 官方来源" [ref=e1312] [cursor=pointer]:
+            - generic [ref=e1313]: 官网来源
+            - strong [ref=e1314]: https://beatswap.net/
+            - paragraph [ref=e1315]: 采集完成 | 证据 1 条 | 官方来源
+          - button "合约地址 0x7F9E76228f18020Bf5864CdF440c6B63afA2320B 等待采集 | 证据 0 条 | 非官方来源" [ref=e1316] [cursor=pointer]:
+            - generic [ref=e1317]: 合约地址
+            - strong [ref=e1318]: "0x7F9E76228f18020Bf5864CdF440c6B63afA2320B"
+            - paragraph [ref=e1319]: 等待采集 | 证据 0 条 | 非官方来源
+          - button "文档来源 https://beatcoin.gitbook.io/beatcoin.doc 采集完成 | 证据 1 条 | 官方来源" [ref=e1320] [cursor=pointer]:
+            - generic [ref=e1321]: 文档来源
+            - strong [ref=e1322]: https://beatcoin.gitbook.io/beatcoin.doc
+            - paragraph [ref=e1323]: 采集完成 | 证据 1 条 | 官方来源
+          - button "Twitter 来源 https://x.com/BrcToTheMoon 等待采集 | 证据 0 条 | 官方来源" [ref=e1324] [cursor=pointer]:
+            - generic [ref=e1325]: Twitter 来源
+            - strong [ref=e1326]: https://x.com/BrcToTheMoon
+            - paragraph [ref=e1327]: 等待采集 | 证据 0 条 | 官方来源
+      - article [ref=e1328]:
+        - generic [ref=e1329]:
+          - heading "来源详情" [level=3] [ref=e1330]
+          - generic [ref=e1331]: 采集完成
+        - paragraph [ref=e1332]: https://beatswap.net/
+        - generic [ref=e1334]:
+          - generic [ref=e1335]: 官网内容
+          - strong [ref=e1336]: BeatSwap
+          - paragraph [ref=e1337]: Web site created using create-react-app
+          - paragraph [ref=e1338]: 可信度 medium | 采集时间 2026/3/25 05:11:42
+      - article [ref=e1339]:
+        - generic [ref=e1340]:
+          - heading "因子详情" [level=3] [ref=e1341]
+          - generic [ref=e1342]: 未知
+        - paragraph [ref=e1343]: 请选择一个因子查看详情。
+      - article [ref=e1344]:
+        - generic [ref=e1345]:
+          - heading "版本流转" [level=3] [ref=e1346]
+          - generic [ref=e1347]: 0 个版本
+        - generic [ref=e1348]:
+          - generic [ref=e1349]:
+            - heading "采集运行记录" [level=3] [ref=e1350]
+            - generic [ref=e1351]: 2 条
+          - generic [ref=e1352]:
+            - generic [ref=e1353] [cursor=pointer]:
+              - strong [ref=e1354]: 链上 RPC 采集 · 采集失败
+              - generic [ref=e1355]: onchain | 证据 0 条 | 成功 0 | 跳过 0
+              - generic [ref=e1357]: ONCHAIN_RPC_URL is not configured, so onchain collection is blocked.
+            - generic [ref=e1358] [cursor=pointer]:
+              - strong [ref=e1359]: 公开网页采集 · 采集完成
+              - generic [ref=e1360]: website_docs | 证据 2 条 | 成功 2 | 跳过 0
