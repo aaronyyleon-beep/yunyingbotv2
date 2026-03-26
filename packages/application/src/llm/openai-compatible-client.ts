@@ -17,6 +17,7 @@ export interface LlmRuntimeConfig {
   baseUrl: string;
   apiKey: string;
   model: string;
+  requestTimeoutMs: number;
 }
 
 export const loadLlmRuntimeConfig = (repoRoot: string): LlmRuntimeConfig | null => {
@@ -24,12 +25,18 @@ export const loadLlmRuntimeConfig = (repoRoot: string): LlmRuntimeConfig | null 
   const baseUrl = env.OPENAI_BASE_URL?.trim();
   const apiKey = env.OPENAI_API_KEY?.trim();
   const model = env.OPENAI_MODEL?.trim();
+  const requestTimeoutMs = Number(env.LLM_REQUEST_TIMEOUT_MS ?? 15000);
 
   if (!baseUrl || !apiKey || !model) {
     return null;
   }
 
-  return { baseUrl, apiKey, model };
+  return {
+    baseUrl,
+    apiKey,
+    model,
+    requestTimeoutMs: Number.isFinite(requestTimeoutMs) && requestTimeoutMs > 0 ? requestTimeoutMs : 15000
+  };
 };
 
 const extractTextContent = (content: string | Array<{ type?: string; text?: string }> | undefined): string => {
@@ -71,7 +78,7 @@ export const createChatCompletion = async (
 
   const callApi = async (useJsonMode: boolean) => {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 45000);
+    const timeout = setTimeout(() => controller.abort(), config.requestTimeoutMs);
     try {
       const response = await fetch(endpoint, {
         method: "POST",

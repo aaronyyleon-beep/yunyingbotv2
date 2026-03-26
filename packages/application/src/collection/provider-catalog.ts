@@ -38,22 +38,14 @@ export const getProviderCatalog = (repoRoot: string): CollectionCapability[] => 
       notes: ["Can fetch public docs pages and whitepaper links when reachable."]
     },
     {
-      providerKey: "twitter_official_api",
-      providerName: "Twitter Official API",
-      category: "twitter",
-      status: "blocked_missing_credentials",
-      requires: ["Twitter API credentials"],
-      notes: ["No Twitter API credentials are configured in the current environment."]
-    },
-    {
       providerKey: "twitter_public_fetch",
       providerName: "Twitter Public Fetch",
       category: "twitter",
       status: "available_with_limits",
       requires: [],
       notes: [
-        "Can attempt public tweet/profile collection without official API access.",
-        "Coverage is limited and some pages or profiles may block automated fetches."
+        "Used as a fallback-only collector when browser-based Twitter capture is unavailable or insufficient.",
+        "Coverage is limited and some pages or profiles may still return blocked or weak captures."
       ]
     },
     {

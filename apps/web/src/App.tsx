@@ -369,6 +369,49 @@ type VersionDetail = {
   }>;
 };
 
+const TASK_HIERARCHY = {
+  level1: "产品基本面评估",
+  level2: [
+    {
+      name: "产品成熟度",
+      factors: ["官网完成度", "白皮书深度", "产品核心功能可用性", "链上产品落地性"]
+    },
+    {
+      name: "社区与用户健康度",
+      factors: ["Twitter 内容质量", "社区活跃质量", "有效用户迹象", "用户购买力迹象"]
+    },
+    {
+      name: "Bot 风险",
+      factors: ["Twitter 异常互动迹象", "社区机械回复迹象", "用户结构异常迹象"]
+    },
+    {
+      name: "增长潜力",
+      factors: ["叙事与市场方向匹配度", "当前活动与产品匹配度", "区域结构匹配度"]
+    },
+    {
+      name: "交叉验证可信度",
+      factors: ["项目说法与白皮书一致性", "白皮书与链上表现一致性", "社区体量与链上体量一致性"]
+    },
+    {
+      name: "综合风险等级",
+      factors: ["时间窗口风险", "团队规模风险", "预算风险"]
+    }
+  ]
+};
+
+const normalizeFactorName = (value: string) =>
+  value
+    .replace(/\s+/g, "")
+    .replace("官网完成度", "官网完整度")
+    .replace("有效用户迹象", "有效用户信号")
+    .replace("用户购买力迹象", "用户购买力信号")
+    .replace("链上产品落地性", "链上产品落地信号")
+    .replace("Twitter异常互动迹象", "Twitter异常互动信号")
+    .replace("社区机械回复迹象", "社区Bot/模板化信号")
+    .replace("用户结构异常迹象", "用户结构异常信号")
+    .replace("社区体量与链上体量一致性", "社区与链上表现一致性")
+    .trim();
+
 const scoreTone = (score: number | null) => {
   if (score === null) return "tone-neutral";
   if (score < 4) return "tone-risk";
@@ -434,14 +477,27 @@ const evidenceTypeLabel = (evidenceType?: string | null) => {
 const collectorLabel = (collectorKey?: string | null) => {
   const labels: Record<string, string> = {
     public_web_fetch: "公开网页采集",
+    whitepaper_pdf_parse: "Whitepaper PDF 解析",
     onchain_rpc_provider: "链上 RPC 采集",
-    twitter_public_fetch: "Twitter 公开采集",
+    twitter_public_fetch: "Twitter 公开回退采集",
     twitter_browser_fetch: "Twitter 浏览器采集",
     telegram_bot_ingestion: "Telegram 机器人采集",
     discord_bot_ingestion: "Discord 机器人采集"
   };
   return labels[collectorKey ?? ""] ?? collectorKey ?? "未知采集器";
 };
+
+const fileToBase64 = async (file: File) =>
+  new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("file_read_failed"));
+    reader.onload = () => {
+      const result = typeof reader.result === "string" ? reader.result : "";
+      const base64 = result.includes(",") ? result.split(",")[1] ?? "" : result;
+      resolve(base64);
+    };
+    reader.readAsDataURL(file);
+  });
 
 const confidenceLabel = (confidence?: string | null) => {
   const labels: Record<string, string> = {
@@ -645,6 +701,8 @@ const groupFactorEvidencesBySource = (evidences: FactorDetail["evidences"]) => {
 
 export default function App() {
   const [tasks, setTasks] = useState<TaskSummary[]>([]);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
+  const [isCreatingTask, setIsCreatingTask] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [snapshot, setSnapshot] = useState<TaskSnapshot | null>(null);
   const [report, setReport] = useState<ReportView | null>(null);
@@ -663,14 +721,24 @@ export default function App() {
   const [factSupplement, setFactSupplement] = useState("");
   const [actionState, setActionState] = useState<string | null>(null);
   const [lastCollectionResult, setLastCollectionResult] = useState<CollectionActionResult | null>(null);
+  const [freshlyCollectedTaskIds, setFreshlyCollectedTaskIds] = useState<Set<string>>(new Set());
+  const [twitterQueueAtByTask, setTwitterQueueAtByTask] = useState<Record<string, string>>({});
+  const [activeActionPath, setActiveActionPath] = useState<string | null>(null);
   const [websiteInput, setWebsiteInput] = useState("https://docs.python.org/3/");
   const [docsInput, setDocsInput] = useState("https://nodejs.org/api/documentation.html");
+  const [whitepaperFile, setWhitepaperFile] = useState<File | null>(null);
+  const [whitepaperInputKey, setWhitepaperInputKey] = useState(0);
   const [twitterInput, setTwitterInput] = useState("https://twitter.com/OpenAI/status/1900000000000000001");
   const [telegramInput, setTelegramInput] = useState("");
   const [discordInput, setDiscordInput] = useState("");
   const [chainInput, setChainInput] = useState<(typeof CHAIN_OPTIONS)[number]["value"]>("ethereum");
   const [contractInput, setContractInput] = useState("");
   const [notesInput, setNotesInput] = useState("new task from web intake");
+  const [activeHierarchyLevel, setActiveHierarchyLevel] = useState<"level2" | "level3">("level2");
+  const [selectedDimensionName, setSelectedDimensionName] = useState<string>(TASK_HIERARCHY.level2[0]?.name ?? "");
+  const [level1Expanded, setLevel1Expanded] = useState(true);
+  const [expandedDimensions, setExpandedDimensions] = useState<Set<string>>(new Set(TASK_HIERARCHY.level2.map((item) => item.name)));
+  const selectedTask = tasks.find((task) => task.id === selectedTaskId) ?? null;
 
   const fetchJson = async <T,>(url: string): Promise<T> => {
     const response = await fetch(url);
@@ -700,13 +768,15 @@ export default function App() {
         : []
   });
 
-  const refreshTasks = async () => {
+  const refreshTasks = async (options?: { loadHistory?: boolean }) => {
     const payload = await fetchJson<{ items: TaskSummary[] }>("/tasks");
     setTasks(payload.items);
-    if (payload.items[0]) setSelectedTaskId((current) => current ?? payload.items[0].id);
-    if (payload.items.length === 0) {
-      setSelectedTaskId(null);
+    if (options?.loadHistory) {
+      setHistoryLoaded(true);
     }
+    setSelectedTaskId((current) =>
+      current && payload.items.some((item) => item.id === current) ? current : null
+    );
   };
 
   const refreshSelectedTask = async (taskId: string) => {
@@ -723,6 +793,22 @@ export default function App() {
     setFinalReport(finalReportPayload);
     setSources(sourcesPayload.items);
     setRuns(runsPayload.items);
+    const queuedAt = twitterQueueAtByTask[taskId];
+    if (queuedAt) {
+      const queuedAtMs = new Date(queuedAt).getTime();
+      const hasTwitterRunAfterQueue = runsPayload.items.some((run) =>
+        run.collector_key === "twitter_browser_fetch" &&
+        ["completed", "partial", "failed"].includes(run.status) &&
+        new Date(run.created_at).getTime() >= queuedAtMs
+      );
+      if (hasTwitterRunAfterQueue) {
+        setTwitterQueueAtByTask((current) => {
+          const next = { ...current };
+          delete next[taskId];
+          return next;
+        });
+      }
+    }
     setSelectedFactorId((current) =>
       snapshotPayload.factors.some((factor) => factor.id === current) ? (current ?? null) : (snapshotPayload.factors[0]?.id ?? null)
     );
@@ -733,10 +819,6 @@ export default function App() {
       sourcesPayload.items.some((source) => source.id === current) ? (current ?? null) : (sourcesPayload.items[0]?.id ?? null)
     );
   };
-
-  useEffect(() => {
-    void refreshTasks();
-  }, []);
 
   useEffect(() => {
     if (!selectedTaskId) return;
@@ -769,12 +851,44 @@ export default function App() {
 
   const runAction = async (label: string, path: string) => {
     if (!selectedTaskId) return;
+    if (path === "analyze-factors" && !freshlyCollectedTaskIds.has(selectedTaskId)) {
+      setActionState("请先对当前任务执行至少一次采集，再运行分析，避免直接使用历史数据。");
+      return;
+    }
+    setActiveActionPath(path);
     setActionState(label);
-    const result = (await fetch(`/tasks/${selectedTaskId}/${path}`, { method: "POST" }).then((response) => response.json())) as Record<string, unknown>;
-    if (path !== "analyze-factors") setLastCollectionResult(normalizeCollectionResult(result));
-    await refreshSelectedTask(selectedTaskId);
-    await refreshTasks();
-    setActionState(`${label.replace("正在", "").replace("...", "")}已刷新。`);
+    try {
+      const response = await fetch(`/tasks/${selectedTaskId}/${path}`, { method: "POST" });
+      const result = (await response.json()) as Record<string, unknown>;
+      if (!response.ok) {
+        throw new Error(typeof result.message === "string" ? result.message : typeof result.error === "string" ? result.error : "unknown_error");
+      }
+      if (path === "collect-twitter-browser") {
+        // Queueing is async; avoid keeping a persistent warning card that looks like an error.
+        setLastCollectionResult(null);
+        setTwitterQueueAtByTask((current) => ({ ...current, [selectedTaskId]: new Date().toISOString() }));
+      } else if (path !== "analyze-factors") {
+        setLastCollectionResult(normalizeCollectionResult(result));
+      }
+      if (path !== "analyze-factors") {
+        setFreshlyCollectedTaskIds((current) => {
+          const next = new Set(current);
+          next.add(selectedTaskId);
+          return next;
+        });
+      }
+      await refreshSelectedTask(selectedTaskId);
+      await refreshTasks();
+      if (path === "collect-twitter-browser") {
+        setActionState("Twitter 浏览器采集任务已入队，Worker 正在异步处理。请稍后刷新采集记录。");
+      } else {
+        setActionState(`${label.replace("正在", "").replace("...", "")}已刷新。`);
+      }
+    } catch (error) {
+      setActionState(`${label.replace("正在", "").replace("...", "")}失败：${error instanceof Error ? error.message : "unknown_error"}`);
+    } finally {
+      setActiveActionPath(null);
+    }
   };
 
   const handleReviewFactor = async () => {
@@ -821,27 +935,71 @@ export default function App() {
   };
 
   const handleCreateTask = async () => {
-    setActionState("正在创建分析任务...");
-    const payload = {
-      inputs: [
-        { type: "url", value: websiteInput },
-        { type: "url", value: docsInput },
-        { type: "url", value: twitterInput },
-        { type: "url", value: telegramInput },
-        { type: "url", value: discordInput },
-        { type: "text", value: `chain:${chainInput}` },
-        ...contractInput
-          .split(/\r?\n|,/)
-          .map((value) => value.trim())
+    if (isCreatingTask) {
+      return;
+    }
+
+    setIsCreatingTask(true);
+    try {
+      setActionState("正在创建分析任务...");
+      const payload = {
+        disableDedupe: true,
+        inputs: [
+          { type: "url", value: websiteInput },
+          { type: "url", value: docsInput },
+          { type: "url", value: twitterInput },
+          { type: "url", value: telegramInput },
+          { type: "url", value: discordInput },
+          { type: "text", value: `chain:${chainInput}` },
+          ...contractInput
+            .split(/\r?\n|,/)
+            .map((value) => value.trim())
+            .filter(Boolean)
+            .map((value) => ({ type: "url" as const, value })),
+          { type: "text", value: notesInput }
+        ].filter((item) => item.value.trim())
+      };
+      const created = (await fetch("/tasks/intake", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }).then((response) => response.json())) as {
+        taskId: string;
+        deduped?: boolean;
+        dedupeWindowMinutes?: number;
+      };
+
+      if (whitepaperFile) {
+        setActionState("正在上传 Whitepaper PDF...");
+        const contentBase64 = await fileToBase64(whitepaperFile);
+        const uploadResponse = await fetch(`/tasks/${created.taskId}/upload-whitepaper-document`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            fileName: whitepaperFile.name,
+            mimeType: whitepaperFile.type || "application/pdf",
+            contentBase64
+          })
+        });
+        if (!uploadResponse.ok) {
+          const message = await uploadResponse.text();
+          throw new Error(`whitepaper_upload_failed:${message}`);
+        }
+        setWhitepaperFile(null);
+        setWhitepaperInputKey((current) => current + 1);
+      }
+
+      await refreshTasks();
+      setSelectedTaskId(created.taskId);
+      setActionState(
+        [
+          created.deduped
+            ? `命中防重复规则：已复用最近 ${created.dedupeWindowMinutes ?? 10} 分钟内同名任务。`
+            : "新任务已创建。",
+          whitepaperFile ? `已附加 Whitepaper PDF：${whitepaperFile.name}。` : null
+        ]
           .filter(Boolean)
-          .map((value) => ({ type: "url" as const, value })),
-        { type: "text", value: notesInput }
-      ].filter((item) => item.value.trim())
-    };
-    const created = (await fetch("/tasks/intake", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }).then((response) => response.json())) as { taskId: string };
-    await refreshTasks();
-    setSelectedTaskId(created.taskId);
-    setActionState("新任务已创建。");
+          .join(" ")
+      );
+    } finally {
+      setIsCreatingTask(false);
+    }
   };
 
   const handleDeleteTask = async (taskId: string) => {
@@ -875,6 +1033,63 @@ export default function App() {
     setActionState("任务已删除。");
   };
 
+  const handleSelectDimension = (dimensionName: string) => {
+    setActiveHierarchyLevel("level2");
+    setSelectedDimensionName(dimensionName);
+    const factor = snapshot?.factors.find((item) => item.dimension_name === dimensionName);
+    if (factor) {
+      setSelectedFactorId(factor.id);
+    }
+  };
+
+  const handleSelectFactor = (dimensionName: string, factorName: string) => {
+    setActiveHierarchyLevel("level3");
+    const candidates = (snapshot?.factors ?? []).filter((item) => item.dimension_name === dimensionName);
+    const factor =
+      candidates.find((item) => normalizeFactorName(item.factor_name) === normalizeFactorName(factorName)) ??
+      candidates[0] ??
+      null;
+    if (factor) {
+      setSelectedDimensionName(factor.dimension_name);
+      setSelectedFactorId(factor.id);
+    }
+  };
+
+  const selectedFactor = snapshot?.factors.find((item) => item.id === selectedFactorId) ?? null;
+  const selectedDimensionFactors = (snapshot?.factors ?? []).filter((item) => item.dimension_name === selectedDimensionName);
+  const selectableTasks = historyLoaded ? tasks : selectedTask ? [selectedTask] : [];
+  const allExpanded = level1Expanded && expandedDimensions.size === TASK_HIERARCHY.level2.length;
+  const hasTask = Boolean(selectedTaskId);
+  const hasFreshCollection = Boolean(selectedTaskId && freshlyCollectedTaskIds.has(selectedTaskId));
+  const hasRunningCollectionRun = runs.some((run) => ["queued", "running"].includes(run.status));
+  const isTwitterQueued = Boolean(selectedTaskId && twitterQueueAtByTask[selectedTaskId]);
+  const collectionInProgress = (activeActionPath !== null && activeActionPath !== "analyze-factors") || hasRunningCollectionRun || isTwitterQueued;
+  const canRunAnalysis = hasTask && hasFreshCollection && !collectionInProgress;
+  const hasAnalysisResult = Boolean(finalReport || report?.report || (snapshot?.factors.length ?? 0) > 0);
+  const canReview = hasTask && hasAnalysisResult && !collectionInProgress;
+
+  const handleToggleDimension = (dimensionName: string) => {
+    setExpandedDimensions((current) => {
+      const next = new Set(current);
+      if (next.has(dimensionName)) {
+        next.delete(dimensionName);
+      } else {
+        next.add(dimensionName);
+      }
+      return next;
+    });
+  };
+
+  const handleToggleAllHierarchy = () => {
+    if (allExpanded) {
+      setLevel1Expanded(false);
+      setExpandedDimensions(new Set());
+      return;
+    }
+    setLevel1Expanded(true);
+    setExpandedDimensions(new Set(TASK_HIERARCHY.level2.map((item) => item.name)));
+  };
+
   return (
     <main className="shell">
       <section className="rail">
@@ -884,27 +1099,52 @@ export default function App() {
         </div>
 
         <div className="intake-card">
-          <p className="eyebrow">New Intake</p>
-          <label>
-            <span>Website</span>
-            <input value={websiteInput} onChange={(event) => setWebsiteInput(event.target.value)} />
-          </label>
-          <label>
-            <span>Docs / Whitepaper</span>
-            <input value={docsInput} onChange={(event) => setDocsInput(event.target.value)} />
-          </label>
-          <label>
-            <span>Twitter / X</span>
-            <input value={twitterInput} onChange={(event) => setTwitterInput(event.target.value)} />
-          </label>
-          <label>
-            <span>Telegram</span>
-            <input value={telegramInput} onChange={(event) => setTelegramInput(event.target.value)} />
-          </label>
-          <label>
-            <span>Discord</span>
-            <input value={discordInput} onChange={(event) => setDiscordInput(event.target.value)} />
-          </label>
+          <p className="eyebrow">Task Stages</p>
+          <div className="intake-field">
+            <label>
+              <span>Website</span>
+              <input value={websiteInput} onChange={(event) => setWebsiteInput(event.target.value)} />
+            </label>
+          </div>
+          <div className="intake-field">
+            <label>
+              <span>Docs / Whitepaper</span>
+              <input value={docsInput} onChange={(event) => setDocsInput(event.target.value)} />
+            </label>
+          </div>
+          <div className="intake-inline-action">
+            <label className="file-picker">
+              <span>Whitepaper PDF 文件</span>
+              <input
+                key={whitepaperInputKey}
+                type="file"
+                accept=".pdf,application/pdf"
+                onChange={(event) => setWhitepaperFile(event.target.files?.[0] ?? null)}
+              />
+            </label>
+            <p className="muted">
+              Docs / Whitepaper 支持填写 URL，也支持直接上传 PDF 文件。{whitepaperFile ? ` 当前已选择：${whitepaperFile.name}` : " 当前未选择文件。"}
+            </p>
+            <p className="muted">{selectedTaskId ? "已选中任务，可直接解析 Whitepaper PDF。" : "先创建或选中任务后，才能解析 Whitepaper PDF。"}</p>
+          </div>
+          <div className="intake-field">
+            <label>
+              <span>Twitter / X</span>
+              <input value={twitterInput} onChange={(event) => setTwitterInput(event.target.value)} />
+            </label>
+          </div>
+          <div className="intake-field">
+            <label>
+              <span>Telegram</span>
+              <input value={telegramInput} onChange={(event) => setTelegramInput(event.target.value)} />
+            </label>
+          </div>
+          <div className="intake-field">
+            <label>
+              <span>Discord</span>
+              <input value={discordInput} onChange={(event) => setDiscordInput(event.target.value)} />
+            </label>
+          </div>
           <label>
             <span>Target Chain</span>
             <select value={chainInput} onChange={(event) => setChainInput(event.target.value as (typeof CHAIN_OPTIONS)[number]["value"])}>
@@ -913,57 +1153,170 @@ export default function App() {
               ))}
             </select>
           </label>
-          <label>
-            <span>Contracts</span>
-            <textarea
-              value={contractInput}
-              onChange={(event) => setContractInput(event.target.value)}
-              placeholder={"每行一个合约地址，支持多个"}
-            />
-          </label>
+          <div className="intake-field intake-field-area">
+            <label>
+              <span>Contracts</span>
+              <textarea
+                value={contractInput}
+                onChange={(event) => setContractInput(event.target.value)}
+                placeholder={"每行一个合约地址，支持多个"}
+              />
+            </label>
+          </div>
           <label>
             <span>Notes</span>
             <textarea value={notesInput} onChange={(event) => setNotesInput(event.target.value)} />
           </label>
-          <button type="button" className="submit-review" onClick={handleCreateTask}>创建任务</button>
+
+          <div className="stage-gate-board">
+            <section className="stage-card">
+              <p className="panel-tag">阶段 0 · 任务初始化</p>
+              <p className="muted">先创建任务，再进入来源配置和采集阶段。</p>
+              <div className="stage-actions">
+                <button type="button" className="submit-review" onClick={handleCreateTask} disabled={isCreatingTask || collectionInProgress}>
+                  {isCreatingTask ? "创建中..." : "创建任务"}
+                </button>
+                <button type="button" className="submit-review secondary-action" onClick={() => void refreshTasks({ loadHistory: true })}>
+                  加载历史任务
+                </button>
+              </div>
+            </section>
+
+            <section className="stage-card">
+              <p className="panel-tag">阶段 1 · 来源配置</p>
+              <p className="muted">{hasTask ? "来源字段可编辑。修改后请先重新采集，再运行分析。" : "先创建或选择任务后再配置来源。"}</p>
+            </section>
+
+            <section className="stage-card">
+              <p className="panel-tag">阶段 2 · 采集执行</p>
+              <p className="muted">
+                {!hasTask
+                  ? "未选择任务，采集不可用。"
+                  : collectionInProgress
+                    ? "采集中或队列处理中，请等待当前采集结束。"
+                    : "按来源触发采集。Twitter 为异步队列。"}
+              </p>
+              <div className="stage-actions">
+                <button type="button" className="submit-review secondary-action" onClick={() => void runAction("正在采集公开页面...", "collect-public")} disabled={!hasTask || collectionInProgress}>采集页面</button>
+                <button type="button" className="submit-review secondary-action" onClick={() => void runAction("正在采集公开页面...", "collect-public")} disabled={!hasTask || collectionInProgress}>采集文档</button>
+                <button type="button" className="submit-review secondary-action" onClick={() => void runAction("正在解析 Whitepaper PDF...", "collect-whitepaper-pdf")} disabled={!hasTask || collectionInProgress}>解析 PDF</button>
+                <button type="button" className="submit-review secondary-action" onClick={() => void runAction("正在通过浏览器采集 Twitter 页面...", "collect-twitter-browser")} disabled={!hasTask || collectionInProgress}>采集 Twitter</button>
+                <button type="button" className="submit-review secondary-action" onClick={() => void runAction("正在采集 Telegram 社区...", "collect-telegram")} disabled={!hasTask || collectionInProgress}>采集 TG</button>
+                <button type="button" className="submit-review secondary-action" onClick={() => void runAction("正在采集 Discord 社区...", "collect-discord")} disabled={!hasTask || collectionInProgress}>采集 Discord</button>
+                <button type="button" className="submit-review secondary-action" onClick={() => void runAction("正在采集链上指标...", "collect-onchain")} disabled={!hasTask || collectionInProgress}>采集链上</button>
+              </div>
+            </section>
+
+            <section className="stage-card">
+              <p className="panel-tag">阶段 3 · 分析生成</p>
+              <p className="muted">{canRunAnalysis ? "已满足运行条件，可生成最新分析。" : "需先完成至少一次当前任务采集，且无进行中的采集。"} </p>
+              <div className="stage-actions">
+                <button type="button" className="submit-review" onClick={() => void runAction("正在运行分析...", "analyze-factors")} disabled={!canRunAnalysis}>运行分析</button>
+              </div>
+            </section>
+
+            <section className="stage-card">
+              <p className="panel-tag">阶段 4 · 人工复核</p>
+              <p className="muted">{canReview ? "可对当前选中三级因子提交人工复核。" : "需先有分析结果，且当前没有进行中的采集。"} </p>
+              <div className="stage-actions">
+                <button type="button" className="submit-review secondary-action" onClick={handleReviewFactor} disabled={!canReview || !selectedFactorId}>
+                  提交复核
+                </button>
+              </div>
+            </section>
+
+            <section className="stage-card">
+              <p className="panel-tag">阶段 5 · 发布冻结</p>
+              <p className="muted">发布版本入口预留，当前请以分析版本快照作为阶段性结果。</p>
+              <div className="stage-actions">
+                <button type="button" className="submit-review secondary-action" disabled title="发布流程即将支持">发布版本（即将支持）</button>
+              </div>
+            </section>
+          </div>
         </div>
 
-        <div className="task-list">
-          {tasks.map((task) => (
-            <button key={task.id} type="button" className={`task-card ${selectedTaskId === task.id ? "is-active" : ""}`} onClick={() => setSelectedTaskId(task.id)}>
-              <div className="task-card-top">
-                <span className="task-name">{task.project_name}</span>
-                <div className="task-card-actions">
-                  <span className={`score-pill ${scoreTone(task.final_score)}`}>{task.final_score?.toFixed(1) ?? "--"}</span>
-                  <span
-                    role="button"
-                    tabIndex={0}
-                    className="task-delete"
-                    onClick={(event) => {
-                      event.preventDefault();
-                      event.stopPropagation();
-                      void handleDeleteTask(task.id);
-                    }}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter" || event.key === " ") {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        void handleDeleteTask(task.id);
-                      }
-                    }}
-                  >
-                    删除
-                  </span>
-                </div>
-              </div>
-              <p className="task-meta">{task.id.slice(0, 8)} · {reviewStatusLabel(task.review_status)}</p>
-              <p className="task-meta">风险等级：{task.risk_level ?? "未知"}</p>
+        <section className="hierarchy-card">
+          <div className="hierarchy-toolbar">
+            <p className="eyebrow">Task Hierarchy</p>
+            <button type="button" className="submit-review secondary-action hierarchy-toggle-all" onClick={handleToggleAllHierarchy}>
+              {allExpanded ? "一键收起" : "一键展开"}
             </button>
-          ))}
-        </div>
+          </div>
+          <label className="task-selector">
+            <span>当前任务</span>
+            <select
+              value={selectedTaskId ?? ""}
+              onChange={(event) => {
+                const value = event.target.value;
+                setSelectedTaskId(value || null);
+              }}
+            >
+              <option value="">未选择任务</option>
+              {selectableTasks.map((task) => (
+                <option key={task.id} value={task.id}>
+                  {task.project_name} · {task.id.slice(0, 8)}
+                </option>
+              ))}
+            </select>
+            <p className="muted">
+              {selectedTask ? `当前聚焦：${selectedTask.project_name} · 风险等级 ${selectedTask.risk_level ?? "未知"}` : "先加载历史任务或创建新任务，再通过下拉切换。"}
+            </p>
+          </label>
+          <div className="hierarchy-level1">
+            <button
+              type="button"
+              className="hierarchy-button hierarchy-head hierarchy-collapsible"
+              onClick={() => setLevel1Expanded((current) => !current)}
+            >
+              <span className="panel-tag">一级任务</span>
+              <strong>{TASK_HIERARCHY.level1}</strong>
+              <span className="hierarchy-toggle-mark">{level1Expanded ? "收起" : "展开"}</span>
+            </button>
+            {level1Expanded ? <p className="muted">该层用于定义产品基本面评估的总任务边界。</p> : null}
+          </div>
+          {level1Expanded ? (
+            <div className="hierarchy-stack">
+              {TASK_HIERARCHY.level2.map((dimension) => {
+                const expanded = expandedDimensions.has(dimension.name);
+                return (
+                  <article key={dimension.name} className="hierarchy-level2">
+                    <button
+                      type="button"
+                      className="hierarchy-button hierarchy-head hierarchy-collapsible"
+                      onClick={() => {
+                        handleSelectDimension(dimension.name);
+                        handleToggleDimension(dimension.name);
+                      }}
+                    >
+                      <span className="panel-tag">二级任务</span>
+                      <strong>{dimension.name}</strong>
+                      <span className="hierarchy-toggle-mark">{expanded ? "收起" : "展开"}</span>
+                    </button>
+                    {expanded ? (
+                      <div className="chip-row">
+                        {dimension.factors.map((factor) => (
+                          <button key={`${dimension.name}-${factor}`} type="button" className="chip hierarchy-chip hierarchy-button" onClick={() => handleSelectFactor(dimension.name, factor)}>
+                            三级：{factor}
+                          </button>
+                        ))}
+                      </div>
+                    ) : null}
+                  </article>
+                );
+              })}
+            </div>
+          ) : null}
+        </section>
       </section>
 
       <section className="main-panel">
+        {!selectedTaskId ? (
+          <section className="empty-state-card">
+            <strong>分析区暂为空</strong>
+            <p className="muted">请先在左侧填写信息并点击“创建任务”，创建后这里会展示分析工作区。</p>
+          </section>
+        ) : (
+          <>
         <header className="hero">
           <div>
             <p className="eyebrow">Analysis Workspace</p>
@@ -973,13 +1326,15 @@ export default function App() {
             <div className="metric-block"><span className="metric-label">Final Score</span><strong>{report?.report?.final_score?.toFixed(1) ?? "--"}</strong></div>
             <div className="metric-block"><span className="metric-label">Risk</span><strong>{report?.report?.risk_level ?? "--"}</strong></div>
             <div className="metric-block"><span className="metric-label">Evidence</span><strong>{snapshot?.summary.evidenceCount ?? 0}</strong></div>
-            <button type="button" className="hero-action" onClick={() => void runAction("正在运行分析...", "analyze-factors")}>运行分析</button>
-            <button type="button" className="hero-action" onClick={() => void runAction("正在采集公开页面...", "collect-public")}>采集公开页面</button>
-            <button type="button" className="hero-action" onClick={() => void runAction("正在采集链上指标...", "collect-onchain")}>采集链上</button>
-            <button type="button" className="hero-action" onClick={() => void runAction("正在采集 Telegram 社区...", "collect-telegram")}>采集 Telegram</button>
-            <button type="button" className="hero-action" onClick={() => void runAction("正在采集 Discord 社区...", "collect-discord")}>采集 Discord</button>
-            <button type="button" className="hero-action" onClick={() => void runAction("正在采集公开 Twitter 信息...", "collect-twitter-public")}>采集公开 Twitter</button>
-            <button type="button" className="hero-action" onClick={() => void runAction("正在通过浏览器采集 Twitter 页面...", "collect-twitter-browser")}>浏览器采集 Twitter</button>
+            <button
+              type="button"
+              className="hero-action"
+              onClick={() => void runAction("正在运行分析...", "analyze-factors")}
+              disabled={!canRunAnalysis}
+              title={!hasTask ? "请先选择任务" : canRunAnalysis ? "运行当前任务分析" : "需先完成一次当前任务采集，且无进行中的采集"}
+            >
+              运行分析
+            </button>
           </div>
         </header>
 
@@ -994,458 +1349,202 @@ export default function App() {
         ) : null}
 
         <section className="panel-grid">
-          <article className="panel report-panel">
-            <div className="panel-title-row">
-              <h3>最终分析报告</h3>
-              <span className="panel-tag">{versionTypeLabel(finalReport?.meta.report_version_type ?? "live_current")}</span>
-            </div>
-            {finalReport ? (
-              <div className="final-report-layout">
-                <section className="report-section">
-                  <div className="panel-title-row">
-                    <h4>执行摘要</h4>
-                    <span className={`score-pill ${scoreTone(finalReport.execution_summary.final_score)}`}>
-                      {finalReport.execution_summary.final_score.toFixed(1)} / {finalReport.execution_summary.risk_level_label}
-                    </span>
-                  </div>
-                  <p className="lead">{finalReport.execution_summary.headline}</p>
-                  <div className="chip-row">
-                    <span className="chip">{versionTypeLabel(finalReport.meta.report_version_type)}</span>
-                    <span className="chip">人工复核 {finalReport.meta.review_count} 次</span>
-                    {finalReport.meta.report_version_created_at ? (
-                      <span className="chip">版本时间 {new Date(finalReport.meta.report_version_created_at).toLocaleString()}</span>
-                    ) : null}
-                  </div>
-                  {finalReport.execution_summary.top_problems.length ? (
-                    <div className="report-list">
-                      {finalReport.execution_summary.top_problems.map((item) => (
-                        <div key={item.factor_key} className="report-list-item risk-item">
-                          <strong>{item.factor_name}</strong>
-                          <p>{item.statement}</p>
-                          <p className="muted">{item.supporting_reason}</p>
-                        </div>
-                      ))}
-                    </div>
-                  ) : null}
-                  {finalReport.execution_summary.positive_signals.length ? (
-                    <div className="chip-row">
-                      {finalReport.execution_summary.positive_signals.map((item) => (
-                        <span key={item.factor_key} className="chip opp-chip">{item.statement}</span>
-                      ))}
-                    </div>
-                  ) : null}
-                </section>
-
-                <section className="report-section">
-                  <div className="panel-title-row">
-                    <h4>综合判断</h4>
-                    <span className="panel-tag">{finalReport.overall_assessment.recommended_decision}</span>
-                  </div>
-                  <p>{finalReport.overall_assessment.conclusion}</p>
-                  <p className="muted">{finalReport.overall_assessment.data_quality_note}</p>
-                </section>
-
-                <section className="report-section">
-                  <div className="panel-title-row">
-                    <h4>维度概览</h4>
-                    <span className="panel-tag">{finalReport.dimension_overview.items.length} 个维度</span>
-                  </div>
-                  <div className="dimension-grid">
-                    {finalReport.dimension_overview.items.map((dimension) => (
-                      <div key={dimension.dimension_key} className="dimension-card static-card report-dimension-card">
-                        <span>{dimension.dimension_name}</span>
-                        <strong className={scoreTone(dimension.final_score)}>{dimension.final_score.toFixed(1)}</strong>
-                        <p>{dimension.judgement}</p>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-
-                <section className="report-section">
-                  <div className="panel-title-row">
-                    <h4>关键问题</h4>
-                    <span className="panel-tag">{finalReport.key_issues.items.length} 项</span>
-                  </div>
-                  <div className="report-list">
-                    {finalReport.key_issues.items.map((item) => (
-                      <div key={item.factor_key} className="report-list-item">
-                        <div className="panel-title-row">
-                          <strong>{item.factor_name}</strong>
-                          <span className={`score-pill ${scoreTone(item.final_score ?? null)}`}>
-                            {item.final_score === null ? "--" : item.final_score.toFixed(1)}
-                          </span>
-                        </div>
-                        <p>{item.issue_statement}</p>
-                        <p className="muted">{item.business_impact}</p>
-                        {item.risk_points.length ? (
-                          <div className="chip-row">
-                            {item.risk_points.map((riskPoint) => (
-                              <span key={`${item.factor_key}-${riskPoint}`} className="chip risk-chip">{riskPoint}</span>
-                            ))}
-                          </div>
-                        ) : null}
-                      </div>
-                    ))}
-                  </div>
-                </section>
-
-                <section className="report-section">
-                  <div className="panel-title-row">
-                    <h4>关键证据</h4>
-                    <span className="panel-tag">{finalReport.key_evidence.groups.length} 组</span>
-                  </div>
-                  <div className="report-list">
-                    {finalReport.key_evidence.groups.map((group) => (
-                      <div key={group.source_group} className="report-list-item">
-                        <strong>{group.source_group}</strong>
-                        <div className="evidence-stack compact-stack">
-                          {group.items.map((item) => (
-                            <div key={`${group.source_group}-${item.title}-${item.captured_at}`} className="evidence-card">
-                              <span className="evidence-type">{evidenceTypeLabel(item.evidence_type)}</span>
-                              <strong>{item.title}</strong>
-                              <p>{item.summary}</p>
-                              <p className="muted">
-                                可信度 {confidenceLabel(item.credibility_level)} | 采集时间 {new Date(item.captured_at).toLocaleString()}
-                              </p>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-
-                <section className="report-section">
-                  <div className="panel-title-row">
-                    <h4>结论与建议入口</h4>
-                    <span className="panel-tag">分析层收口</span>
-                  </div>
-                  <p>{finalReport.conclusion_and_next_step.conclusion}</p>
-                  <div className="chip-row">
-                    {finalReport.conclusion_and_next_step.priority_review_areas.map((item) => (
-                      <span key={`priority-${item}`} className="chip risk-chip">优先复核：{item}</span>
-                    ))}
-                  </div>
-                  <div className="chip-row">
-                    {finalReport.conclusion_and_next_step.retained_strengths.map((item) => (
-                      <span key={`strength-${item}`} className="chip opp-chip">保留优势：{item}</span>
-                    ))}
-                  </div>
-                  <p className="muted">{finalReport.conclusion_and_next_step.strategy_entry_note}</p>
-                </section>
-              </div>
-            ) : (
-              <>
-                <p className="lead">{report?.report?.summary ?? "暂无报告。"}</p>
-                <p className="muted">{report?.report?.data_quality_note ?? ""}</p>
-                <div className="dimension-grid">
-                  {(report?.dimensions ?? []).map((dimension) => (
-                    <div key={dimension.dimension_key} className="dimension-card static-card">
-                      <span>{dimension.dimension_name}</span>
-                      <strong className={scoreTone(dimension.final_score)}>{dimension.final_score.toFixed(1)}</strong>
-                    </div>
-                  ))}
+          {activeHierarchyLevel === "level2" ? (
+            <>
+              <article className="panel report-panel">
+                <div className="panel-title-row">
+                  <h3>最终分析报告</h3>
+                  <span className="panel-tag">{selectedDimensionName}</span>
                 </div>
-              </>
-            )}
-          </article>
-
-          <article className="panel factor-panel">
-            <div className="panel-title-row"><h3>因子看板</h3><span className="panel-tag">{snapshot?.summary.factorCount ?? 0} 个因子</span></div>
-            <div className="factor-list">{(snapshot?.factors ?? []).map((factor) => <button key={factor.id} type="button" className={`factor-row ${selectedFactorId === factor.id ? "is-selected" : ""}`} onClick={() => setSelectedFactorId(factor.id)}><div><div className="factor-name">{factor.factor_name}</div><div className="factor-sub">{factor.dimension_name} · {factor.status}</div></div><strong className={scoreTone(factor.final_score)}>{factor.final_score.toFixed(1)}</strong></button>)}</div>
-          </article>
-
-          <article className="panel">
-            <div className="panel-title-row"><h3>来源列表</h3><span className="panel-tag">{sources.length} 个来源</span></div>
-            <div className="evidence-stack">{sources.map((source) => <button key={source.id} type="button" className={`factor-row ${selectedSourceId === source.id ? "is-selected" : ""}`} onClick={() => setSelectedSourceId(source.id)}><span className="evidence-type">{sourceTypeLabel(source.source_type)}</span><strong>{source.source_url}</strong><p>{sourceStatusLabel(source.access_status)} | 证据 {source.evidence_count} 条 | {source.is_official ? "官方来源" : "非官方来源"}</p>{source.source_type === "contract" && source.chain_label ? <p className="muted">目标链：{source.chain_label}</p> : null}</button>)}</div>
-          </article>
-
-          <article className="panel">
-            <div className="panel-title-row"><h3>来源详情</h3><span className="panel-tag">{sourceStatusLabel(sourceDetail?.source?.access_status)}</span></div>
-            {sourceDetail ? <>
-              <p className="muted">{sourceDetail.source.source_url}</p>
-
-              {sourceDetail.communityContext ? (
-                <div className="twitter-detail-block">
-                  <div className="panel-title-row">
-                    <h3>社区采样上下文</h3>
-                    <span className="panel-tag">{sourceTypeLabel(sourceDetail.communityContext.platform)}</span>
-                  </div>
-                  <div className="dimension-grid metric-grid">
-                    <div className="dimension-card static-card"><span>目标标签</span><strong>{sourceDetail.communityContext.target_label ?? "--"}</strong></div>
-                    <div className="dimension-card static-card"><span>目标类型</span><strong>{sourceDetail.communityContext.target_kind ?? "--"}</strong></div>
-                    <div className="dimension-card static-card"><span>请求窗口</span><strong>{sourceDetail.communityContext.requested_window_hours}h</strong></div>
-                    <div className="dimension-card static-card"><span>有效窗口</span><strong>{sourceDetail.communityContext.effective_window_hours ? `${sourceDetail.communityContext.effective_window_hours}h` : "--"}</strong></div>
-                  </div>
-                  <div className="chip-row">
-                    <span className="chip">{historyAccessModeLabel(sourceDetail.communityContext.history_access_mode)}</span>
-                    <span className="chip">{botAccessStatusLabel(sourceDetail.communityContext.bot_access_status)}</span>
-                  </div>
-                </div>
-              ) : null}
-
-              {sourceDetail.onchainContext ? (
-                <div className="twitter-detail-block">
-                  <div className="panel-title-row">
-                    <h3>链上 L1 基础识别</h3>
-                    <span className="panel-tag">{sourceDetail.onchainContext.chainLabel}</span>
-                  </div>
-                  <p className="lead compact-lead">{onchainL1Summary(sourceDetail.onchainDetail)}</p>
-                  <p className="muted">{onchainL1BoundaryText}</p>
-                  <div className="dimension-grid metric-grid">
-                    <div className="dimension-card static-card"><span>目标链</span><strong>{sourceDetail.onchainContext.chainLabel}</strong></div>
-                    <div className="dimension-card static-card"><span>基础识别结论</span><strong>{onchainReadinessLabel(sourceDetail.onchainDetail?.hasCode)}</strong></div>
-                    <div className="dimension-card static-card"><span>代码识别</span><strong>{sourceDetail.onchainDetail?.hasCode === null ? "--" : sourceDetail.onchainDetail?.hasCode ? "已检测到" : "未检测到"}</strong></div>
-                    <div className="dimension-card static-card"><span>最新区块</span><strong>{sourceDetail.onchainDetail?.latestBlock ?? "--"}</strong></div>
-                    <div className="dimension-card static-card"><span>原生币余额</span><strong>{onchainBalanceLabel(sourceDetail.onchainDetail?.balance)}</strong></div>
-                  </div>
-                  <div className="chip-row">
-                    <span className="chip">当前层级：链上 L1 基础识别</span>
-                    {sourceDetail.onchainContext.contractRoleHint ? (
-                      <span className="chip">角色备注：{sourceDetail.onchainContext.contractRoleHint}</span>
-                    ) : (
-                      <span className="chip">角色备注：暂未填写</span>
-                    )}
-                  </div>
-
-                  {sourceDetail.onchainDetail?.contractProfile ? (
-                    <section className="factor-metric-strip">
+                {finalReport ? (
+                  <div className="final-report-layout">
+                    <section className="report-section">
                       <div className="panel-title-row">
-                        <h5>规则识别结果</h5>
-                        <span className="panel-tag">
-                          {sourceDetail.onchainDetail.contractProfile.detectedInterfaces.length
-                            ? `${sourceDetail.onchainDetail.contractProfile.detectedInterfaces.length} 项特征`
-                            : "未识别明显特征"}
+                        <h4>最终分析报告</h4>
+                        <span className={`score-pill ${scoreTone(finalReport.execution_summary.final_score)}`}>
+                          {finalReport.execution_summary.final_score.toFixed(1)} / {finalReport.execution_summary.risk_level_label}
                         </span>
                       </div>
-                      <div className="dimension-grid metric-grid">
-                        <div className="dimension-card static-card"><span>名称</span><strong>{sourceDetail.onchainDetail.contractProfile.tokenMetadata.name ?? "--"}</strong></div>
-                        <div className="dimension-card static-card"><span>符号</span><strong>{sourceDetail.onchainDetail.contractProfile.tokenMetadata.symbol ?? "--"}</strong></div>
-                        <div className="dimension-card static-card"><span>精度</span><strong>{sourceDetail.onchainDetail.contractProfile.tokenMetadata.decimals ?? "--"}</strong></div>
-                        <div className="dimension-card static-card"><span>总供应</span><strong>{sourceDetail.onchainDetail.contractProfile.tokenMetadata.totalSupply ?? "--"}</strong></div>
-                        <div className="dimension-card static-card"><span>Owner</span><strong>{sourceDetail.onchainDetail.contractProfile.ownership.owner ?? "--"}</strong></div>
-                        <div className="dimension-card static-card"><span>Implementation</span><strong>{sourceDetail.onchainDetail.contractProfile.proxy.implementationAddress ?? "--"}</strong></div>
-                      </div>
-                      <div className="chip-row">
-                        {sourceDetail.onchainDetail.contractProfile.detectedInterfaces.length ? (
-                          sourceDetail.onchainDetail.contractProfile.detectedInterfaces.map((item) => (
-                            <span key={item} className="chip">{item}</span>
-                          ))
-                        ) : (
-                          <span className="chip">暂未识别到明显标准接口</span>
-                        )}
-                      </div>
+                      <p className="lead">{finalReport.execution_summary.headline}</p>
+                      <p className="muted">{finalReport.overall_assessment.conclusion}</p>
                     </section>
-                  ) : null}
 
-                  {sourceDetail.onchainDetail?.codeFeatures ? (
-                    <section className="factor-metric-strip">
+                    <section className="report-section">
                       <div className="panel-title-row">
-                        <h5>链上 L2.5 代码特征检测</h5>
-                        <span className="panel-tag">{onchainCodeShapeLabel(sourceDetail.onchainDetail.codeFeatures.codeShape)}</span>
+                        <h4>维度概览</h4>
+                        <span className="panel-tag">{finalReport.dimension_overview.items.length} 个维度</span>
                       </div>
-                      <p className="muted">
-                        {sourceDetail.onchainDetail.codeFeatures.featureReason ?? "当前还没有形成稳定的代码特征判断。"}
-                      </p>
-                      <div className="dimension-grid metric-grid">
-                        <div className="dimension-card static-card"><span>字节码长度</span><strong>{formatMetric(sourceDetail.onchainDetail.codeFeatures.bytecodeLength)}</strong></div>
-                        <div className="dimension-card static-card"><span>识别到的选择器</span><strong>{formatMetric(sourceDetail.onchainDetail.codeFeatures.selectorCount)}</strong></div>
-                        <div className="dimension-card static-card"><span>复杂度提示</span><strong>{sourceDetail.onchainDetail.codeFeatures.complexityHint ?? "--"}</strong></div>
-                      </div>
-                      <div className="chip-row">
-                        {sourceDetail.onchainDetail.codeFeatures.detectedFeatures.length ? (
-                          sourceDetail.onchainDetail.codeFeatures.detectedFeatures.map((item) => (
-                            <span key={item} className="chip">{item}</span>
-                          ))
-                        ) : (
-                          <span className="chip">暂未识别到明显代码特征</span>
-                        )}
-                      </div>
-                      {sourceDetail.onchainDetail.codeFeatures.matchedSelectors.length ? (
-                        <div className="chip-row">
-                          {sourceDetail.onchainDetail.codeFeatures.matchedSelectors.slice(0, 8).map((item) => (
-                            <span key={item} className="chip">{item}</span>
-                          ))}
-                        </div>
-                      ) : null}
-                      {sourceDetail.onchainDetail.codeFeatures.boundaryNote ? (
-                        <p className="muted">{sourceDetail.onchainDetail.codeFeatures.boundaryNote}</p>
-                      ) : null}
-                    </section>
-                  ) : null}
-
-                  {sourceDetail.onchainDetail?.roleAssessment ? (
-                    <section className="factor-metric-strip">
-                      <div className="panel-title-row">
-                        <h5>链上 L2 合约角色识别</h5>
-                        <span className="panel-tag">{sourceDetail.onchainDetail.roleAssessment.roleGuess ?? "Unknown"}</span>
-                      </div>
-                      <p className="muted">
-                        {sourceDetail.onchainDetail.roleAssessment.reason ?? "当前还没有形成稳定的角色判断。"}
-                      </p>
-                      <div className="chip-row">
-                        <span className="chip">置信度：{onchainRoleConfidenceLabel(sourceDetail.onchainDetail.roleAssessment.confidence)}</span>
-                        <span className="chip">分析方式：{onchainAnalysisModeLabel(sourceDetail.onchainDetail.roleAssessment.analysisMode)}</span>
-                      </div>
-                      {sourceDetail.onchainDetail.roleAssessment.nextStepHint ? (
-                        <p className="muted">{sourceDetail.onchainDetail.roleAssessment.nextStepHint}</p>
-                      ) : null}
-                    </section>
-                  ) : null}
-
-                  <section className="factor-metric-strip">
-                    <div className="panel-title-row">
-                      <h5>相关 LP 候选</h5>
-                      <button type="button" className="submit-review" onClick={handleDiscoverLpCandidates}>
-                        自动检索
-                      </button>
-                    </div>
-                    {sourceDetail.onchainDetail?.lpCandidates?.length ? (
-                      <div className="evidence-stack">
-                        {sourceDetail.onchainDetail.lpCandidates.map((candidate) => (
-                          <div key={candidate.id} className="evidence-card">
-                            <span className="evidence-type">{candidate.dexLabel}</span>
-                            <strong>{candidate.lpAddress}</strong>
-                            <p>{candidate.rationale}</p>
-                            <div className="chip-row">
-                              <span className="chip">配对资产：{candidate.quoteTokenLabel}</span>
-                              <span className="chip">置信度：{candidate.confidence}</span>
-                              <span className="chip">{lpCandidateStatusLabel(candidate.status)}</span>
-                            </div>
-                            {candidate.status === "pending" ? (
-                              <div className="chip-row">
-                                <button type="button" className="submit-review" onClick={() => handleLpCandidateAction(candidate.id, "confirm")}>
-                                  确认纳入
-                                </button>
-                                <button type="button" className="ghost-action" onClick={() => handleLpCandidateAction(candidate.id, "ignore")}>
-                                  忽略
-                                </button>
-                              </div>
-                            ) : null}
+                      <div className="dimension-grid">
+                        {finalReport.dimension_overview.items.map((dimension) => (
+                          <div key={dimension.dimension_key} className="dimension-card static-card report-dimension-card">
+                            <span>{dimension.dimension_name}</span>
+                            <strong className={scoreTone(dimension.final_score)}>{dimension.final_score.toFixed(1)}</strong>
+                            <p>{dimension.judgement}</p>
                           </div>
                         ))}
                       </div>
-                    ) : (
-                      <p className="muted">当前还没有 LP 候选。可先点击“自动检索”，再人工确认是否纳入。</p>
-                    )}
-                  </section>
-                </div>
-              ) : null}
+                    </section>
 
-              {sourceDetail.communityDetail ? (
-                <div className="twitter-detail-block">
-                  <div className="panel-title-row">
-                    <h3>社区质量骨架</h3>
-                    <span className="panel-tag">
-                      {communityOverallStatusLabel(sourceDetail.communityDetail.qualityAssessment?.overallStatus)}
-                    </span>
-                  </div>
+                    <section className="report-section">
+                      <div className="panel-title-row">
+                        <h4>关键问题汇总</h4>
+                        <span className="panel-tag">{finalReport.key_issues.items.length} 项</span>
+                      </div>
+                      <div className="report-list">
+                        {finalReport.key_issues.items.map((item) => (
+                          <div key={item.factor_key} className="report-list-item">
+                            <strong>{item.factor_name}</strong>
+                            <p>{item.issue_statement}</p>
+                            <p className="muted">{item.business_impact}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </section>
 
-                  {sourceDetail.communityDetail.windowSummary ? (
-                    <div className="dimension-grid metric-grid">
-                      <div className="dimension-card static-card"><span>消息总量</span><strong>{formatMetric(sourceDetail.communityDetail.windowSummary.messageCount)}</strong></div>
-                      <div className="dimension-card static-card"><span>发言人数</span><strong>{formatMetric(sourceDetail.communityDetail.windowSummary.speakerCount)}</strong></div>
-                      <div className="dimension-card static-card"><span>请求窗口</span><strong>{sourceDetail.communityDetail.windowSummary.requestedWindowHours ? `${sourceDetail.communityDetail.windowSummary.requestedWindowHours}h` : "--"}</strong></div>
-                      <div className="dimension-card static-card"><span>有效窗口</span><strong>{sourceDetail.communityDetail.windowSummary.effectiveWindowHours ? `${sourceDetail.communityDetail.windowSummary.effectiveWindowHours}h` : "--"}</strong></div>
-                    </div>
-                  ) : (
-                    <p className="muted">社区窗口摘要暂时还没有落入证据。</p>
-                  )}
-
-                  {sourceDetail.communityDetail.qualityAssessment ? (
-                    <div className="chip-row">
-                      <span className="chip opp-chip">活跃质量参考分 {sourceDetail.communityDetail.qualityAssessment.activityQualityScore ?? "--"}</span>
-                      <span className="chip opp-chip">讨论有效性参考分 {sourceDetail.communityDetail.qualityAssessment.discussionEffectivenessScore ?? "--"}</span>
-                      <span className="chip opp-chip">参与深度参考分 {sourceDetail.communityDetail.qualityAssessment.participationDepthScore ?? "--"}</span>
-                      <span className="chip risk-chip">异常风险参考分 {sourceDetail.communityDetail.qualityAssessment.botRiskScore ?? "--"}</span>
-                    </div>
-                  ) : null}
-
-                  {sourceDetail.communityDetail.structureMetrics ? (
-                    <div className="dimension-grid metric-grid">
-                      <div className="dimension-card static-card"><span>头部发言占比</span><strong>{formatRatio(sourceDetail.communityDetail.structureMetrics.activity?.topSpeakersShare)}</strong></div>
-                      <div className="dimension-card static-card"><span>重复文本占比</span><strong>{formatRatio(sourceDetail.communityDetail.structureMetrics.repetition?.duplicateMessageRatio)}</strong></div>
-                      <div className="dimension-card static-card"><span>低信息占比</span><strong>{formatRatio(sourceDetail.communityDetail.structureMetrics.repetition?.lowSignalRatio)}</strong></div>
-                      <div className="dimension-card static-card"><span>项目相关讨论占比</span><strong>{formatRatio(sourceDetail.communityDetail.structureMetrics.discussion?.projectRelevantRatio)}</strong></div>
-                      <div className="dimension-card static-card"><span>问答互动占比</span><strong>{formatRatio(sourceDetail.communityDetail.structureMetrics.discussion?.qaInteractionRatio)}</strong></div>
-                    </div>
-                  ) : null}
-
-                  {sourceDetail.communityDetail.qualityAssessment?.keyFindings?.length ? (
-                    <div className="chip-row">
-                      {sourceDetail.communityDetail.qualityAssessment.keyFindings.map((item) => (
-                        <span key={item} className="chip">{item}</span>
-                      ))}
-                    </div>
-                  ) : null}
-
-                  {sourceDetail.communityDetail.messageSamples.length ? (
-                    <div className="evidence-stack">
-                      {sourceDetail.communityDetail.messageSamples.map((sample) => (
-                        <div key={sample.evidenceId} className="evidence-card">
-                          <span className="evidence-type">{communityBucketLabel(sample.bucket)}</span>
-                          <strong>{sample.title ?? "社区样本包"}</strong>
-                          <p>{sample.summary ?? "暂无样本摘要。"}</p>
-                          <p className="muted">样本量 {sample.itemCount ?? sample.sampleMessages.length} 条</p>
-                          {sample.sampleMessages.length ? (
-                            <div className="chip-row">
-                              {sample.sampleMessages.slice(0, 3).map((message, index) => (
-                                <span key={`${sample.evidenceId}-${index}`} className="chip">
-                                  {(message.author ?? "匿名")}：{message.text ?? "空消息"}
-                                </span>
+                    <section className="report-section">
+                      <div className="panel-title-row">
+                        <h4>关键证据汇总</h4>
+                        <span className="panel-tag">{finalReport.key_evidence.groups.length} 组</span>
+                      </div>
+                      <div className="report-list">
+                        {finalReport.key_evidence.groups.map((group) => (
+                          <div key={group.source_group} className="report-list-item">
+                            <strong>{group.source_group}</strong>
+                            <div className="evidence-stack compact-stack">
+                              {group.items.map((item) => (
+                                <div key={`${group.source_group}-${item.title}-${item.captured_at}`} className="evidence-card">
+                                  <span className="evidence-type">{evidenceTypeLabel(item.evidence_type)}</span>
+                                  <strong>{item.title}</strong>
+                                  <p>{item.summary}</p>
+                                </div>
                               ))}
                             </div>
-                          ) : null}
-                        </div>
+                          </div>
+                        ))}
+                      </div>
+                    </section>
+
+                    <section className="report-section">
+                      <div className="panel-title-row">
+                        <h4>结论与建议入口</h4>
+                        <span className="panel-tag">二级任务结论</span>
+                      </div>
+                      <p>{finalReport.conclusion_and_next_step.conclusion}</p>
+                      <div className="chip-row">
+                        {finalReport.conclusion_and_next_step.priority_review_areas.map((item) => (
+                          <span key={`priority-${item}`} className="chip risk-chip">优先复核：{item}</span>
+                        ))}
+                      </div>
+                    </section>
+                  </div>
+                ) : (
+                  <p className="muted">当前任务还没有可用的最终分析报告，请先运行分析。</p>
+                )}
+              </article>
+
+              <article className="panel factor-panel">
+                <div className="panel-title-row">
+                  <h3>因子评估看板</h3>
+                  <span className="panel-tag">{selectedDimensionFactors.length} 个因子</span>
+                </div>
+                <div className="factor-list">
+                  {selectedDimensionFactors.map((factor) => (
+                    <button
+                      key={factor.id}
+                      type="button"
+                      className={`factor-row ${selectedFactorId === factor.id ? "is-selected" : ""}`}
+                      onClick={() => {
+                        setSelectedFactorId(factor.id);
+                        setActiveHierarchyLevel("level3");
+                      }}
+                    >
+                      <div>
+                        <div className="factor-name">{factor.factor_name}</div>
+                        <div className="factor-sub">{factor.dimension_name} · {factor.status}</div>
+                      </div>
+                      <strong className={scoreTone(factor.final_score)}>{factor.final_score.toFixed(1)}</strong>
+                    </button>
+                  ))}
+                  {selectedDimensionFactors.length === 0 ? <p className="muted">当前维度还没有因子结果。</p> : null}
+                </div>
+              </article>
+
+              <article className="panel version-panel">
+                <div className="panel-title-row"><h3>采集运行记录</h3><span className="panel-tag">{runs.length} 条</span></div>
+                <div className="version-list">
+                  {runs.map((run) => (
+                    <div key={run.id} className="version-row">
+                      <strong>{collectorLabel(run.collector_key)} · {sourceStatusLabel(run.status)}</strong>
+                      <span>{sourceTypeLabel(run.source_type)} | 证据 {run.evidence_count} 条 | 成功 {run.collected_count} | 跳过 {run.skipped_count}</span>
+                      {run.warnings.length ? <div className="chip-row">{run.warnings.map((warning) => <span key={warning} className="chip risk-chip">{warning}</span>)}</div> : null}
+                    </div>
+                  ))}
+                </div>
+              </article>
+            </>
+          ) : (
+            <article className="panel report-panel">
+              <div className="panel-title-row">
+                <h3>三级因子分析</h3>
+                <span className="panel-tag">{selectedFactor?.factor_name ?? "未选择因子"}</span>
+              </div>
+              {factorDetail ? (
+                <div className="final-report-layout">
+                  <section className="report-section">
+                    <div className="panel-title-row">
+                      <h4>关键问题</h4>
+                      <span className="panel-tag">{confidenceLabel(factorDetail.factor.confidence_level)}</span>
+                    </div>
+                    <p>{factorDetail.factor.score_reason}</p>
+                    <div className="chip-row">
+                      {factorDetail.factor.risk_points.map((item) => <span key={item} className="chip risk-chip">{item}</span>)}
+                    </div>
+                  </section>
+
+                  <section className="report-section">
+                    <div className="panel-title-row">
+                      <h4>关键证据</h4>
+                      <span className="panel-tag">{factorDetail.evidences.length} 条</span>
+                    </div>
+                    <div className="evidence-stack">
+                      {groupFactorEvidencesBySource(factorDetail.evidences).map((group) => (
+                        <section key={group.key} className="evidence-group">
+                          <div className="panel-title-row"><h5>{group.title}</h5><span className="panel-tag">{group.items.length} 条</span></div>
+                          <div className="evidence-stack">
+                            {group.items.map((evidence) => (
+                              <div key={evidence.id} className="evidence-card">
+                                <span className="evidence-type">{evidenceTypeLabel(evidence.evidence_type)}</span>
+                                <strong>{evidence.title ?? "Untitled evidence"}</strong>
+                                <p>{evidence.summary ?? "暂无摘要。"}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </section>
                       ))}
                     </div>
-                  ) : (
-                    <p className="muted">社区样本包暂时还没有落入证据。</p>
-                  )}
+                  </section>
+
+                  <section className="report-section">
+                    <div className="panel-title-row">
+                      <h4>结论与建议入口</h4>
+                      <span className="panel-tag">三级因子结论</span>
+                    </div>
+                    <p>
+                      {(factorDetail.factor.risk_points[0] ?? "当前因子已完成分析，可结合关键问题继续复核。")}
+                    </p>
+                    <div className="chip-row">
+                      {factorDetail.factor.opportunity_points.map((item) => <span key={item} className="chip opp-chip">{item}</span>)}
+                    </div>
+                  </section>
                 </div>
-              ) : null}
-
-              {sourceDetail.twitterDetail ? (
-                <div className="twitter-detail-block">
-                  <div className="panel-title-row"><h3>推文采集结论</h3><span className="panel-tag">{twitterPageStatusLabel(sourceDetail.twitterDetail.pageStatus)}</span></div>
-                  <p className="muted">{sourceDetail.twitterDetail.statusReason ?? "暂无页面判断说明。"}</p>
-                  {sourceDetail.twitterDetail.text ? <p className="lead compact-lead">{sourceDetail.twitterDetail.text}</p> : null}
-                  <div className="dimension-grid metric-grid">
-                    <div className="dimension-card static-card"><span>查看</span><strong>{formatMetric(sourceDetail.twitterDetail.metrics?.views)}</strong></div>
-                    <div className="dimension-card static-card"><span>回复</span><strong>{formatMetric(sourceDetail.twitterDetail.metrics?.replies)}</strong></div>
-                    <div className="dimension-card static-card"><span>转发</span><strong>{formatMetric(sourceDetail.twitterDetail.metrics?.reposts)}</strong></div>
-                    <div className="dimension-card static-card"><span>点赞</span><strong>{formatMetric(sourceDetail.twitterDetail.metrics?.likes)}</strong></div>
-                    <div className="dimension-card static-card"><span>收藏</span><strong>{formatMetric(sourceDetail.twitterDetail.metrics?.bookmarks)}</strong></div>
-                  </div>
-                  <div className="chip-row">
-                    <span className="chip opp-chip">内容质量参考分 {sourceDetail.twitterDetail.tweetQualityScore ?? "--"}</span>
-                    <span className="chip opp-chip">评论质量参考分 {sourceDetail.twitterDetail.commentQualityScore ?? "--"}</span>
-                    <span className="chip">可见评论样本 {sourceDetail.twitterDetail.visibleReplyCount ?? 0} 条</span>
-                    {sourceDetail.twitterDetail.publishedAt ? <span className="chip">发布时间 {new Date(sourceDetail.twitterDetail.publishedAt).toLocaleString()}</span> : null}
-                  </div>
-                </div>
-              ) : null}
-
-              <div className="evidence-stack">
-                {sourceDetail.evidences.length ? sourceDetail.evidences.map((evidence) => <div key={evidence.id} className="evidence-card"><span className="evidence-type">{evidenceTypeLabel(evidence.evidence_type)}</span><strong>{evidence.title ?? "Untitled evidence"}</strong><p>{evidence.summary ?? "暂无摘要。"}</p><p className="muted">可信度 {evidence.credibility_level} | 采集时间 {new Date(evidence.captured_at).toLocaleString()}</p></div>) : <p className="muted">这个来源暂时还没有挂上证据。</p>}
-              </div>
-
-              {sourceDetail.relatedRuns.length ? <div className="version-detail"><div className="panel-title-row"><h3>相关采集记录</h3><span className="panel-tag">{sourceDetail.relatedRuns.length}</span></div><div className="version-list">{sourceDetail.relatedRuns.map((run) => <div key={run.id} className="version-row"><strong>{collectorLabel(run.collector_key)} · {sourceStatusLabel(run.status)}</strong><span>证据 {run.evidence_count} 条 | 成功 {run.collected_count} | 跳过 {run.skipped_count}</span>{run.warnings.length ? <div className="chip-row">{run.warnings.map((warning) => <span key={warning} className="chip risk-chip">{warning}</span>)}</div> : null}</div>)}</div></div> : null}
-            </> : <p className="muted">请选择一个来源查看详情。</p>}
-          </article>
-
-          <article className="panel detail-panel">
-            <div className="panel-title-row"><h3>因子详情</h3><span className="panel-tag">{confidenceLabel(factorDetail?.factor.confidence_level)}</span></div>
-            {factorDetail ? <><h4>{factorDetail.factor.factor_name}</h4><p className="muted">{factorDetail.factor.score_reason}</p><div className="chip-row">{factorDetail.factor.risk_points.map((item) => <span key={item} className="chip risk-chip">{item}</span>)}{factorDetail.factor.opportunity_points.map((item) => <span key={item} className="chip opp-chip">{item}</span>)}</div>{factorDetail.twitter_detail?.metrics ? <section className="factor-metric-strip"><div className="panel-title-row"><h5>互动信号速览</h5>{factorDetail.twitter_detail.page_status ? <span className="panel-tag">{twitterPageStatusLabel(factorDetail.twitter_detail.page_status)}</span> : null}</div><div className="dimension-grid metric-grid"><div className="dimension-card static-card"><span>查看</span><strong>{formatMetric(factorDetail.twitter_detail.metrics.views)}</strong></div><div className="dimension-card static-card"><span>回复</span><strong>{formatMetric(factorDetail.twitter_detail.metrics.replies)}</strong></div><div className="dimension-card static-card"><span>转发</span><strong>{formatMetric(factorDetail.twitter_detail.metrics.reposts)}</strong></div><div className="dimension-card static-card"><span>点赞</span><strong>{formatMetric(factorDetail.twitter_detail.metrics.likes)}</strong></div><div className="dimension-card static-card"><span>收藏</span><strong>{formatMetric(factorDetail.twitter_detail.metrics.bookmarks)}</strong></div></div><div className="chip-row">{factorDetail.twitter_detail.tweet_quality_score !== null ? <span className="chip opp-chip">内容质量参考分 {factorDetail.twitter_detail.tweet_quality_score}</span> : null}{factorDetail.twitter_detail.comment_quality_score !== null ? <span className="chip opp-chip">评论质量参考分 {factorDetail.twitter_detail.comment_quality_score}</span> : null}{factorDetail.twitter_detail.visible_reply_count !== null ? <span className="chip">可见评论样本 {factorDetail.twitter_detail.visible_reply_count} 条</span> : null}{factorDetail.twitter_detail.published_at ? <span className="chip">发布时间 {new Date(factorDetail.twitter_detail.published_at).toLocaleString()}</span> : null}</div></section> : null}{factorDetail.community_detail ? <section className="factor-metric-strip"><div className="panel-title-row"><h5>社区信号速览</h5>{factorDetail.community_detail.quality_assessment?.overall_status ? <span className="panel-tag">{communityOverallStatusLabel(factorDetail.community_detail.quality_assessment.overall_status)}</span> : null}</div><div className="dimension-grid metric-grid">{factorDetail.community_detail.window_summary ? <><div className="dimension-card static-card"><span>消息总量</span><strong>{formatMetric(factorDetail.community_detail.window_summary.message_count)}</strong></div><div className="dimension-card static-card"><span>发言人数</span><strong>{formatMetric(factorDetail.community_detail.window_summary.speaker_count)}</strong></div><div className="dimension-card static-card"><span>请求窗口</span><strong>{factorDetail.community_detail.window_summary.requested_window_hours ? `${factorDetail.community_detail.window_summary.requested_window_hours}h` : "--"}</strong></div><div className="dimension-card static-card"><span>有效窗口</span><strong>{factorDetail.community_detail.window_summary.effective_window_hours ? `${factorDetail.community_detail.window_summary.effective_window_hours}h` : "--"}</strong></div></> : null}{factorDetail.community_detail.structure_metrics ? <><div className="dimension-card static-card"><span>头部发言占比</span><strong>{formatRatio(factorDetail.community_detail.structure_metrics.activity?.topSpeakersShare)}</strong></div><div className="dimension-card static-card"><span>重复文本占比</span><strong>{formatRatio(factorDetail.community_detail.structure_metrics.repetition?.duplicateMessageRatio)}</strong></div><div className="dimension-card static-card"><span>低信息占比</span><strong>{formatRatio(factorDetail.community_detail.structure_metrics.repetition?.lowSignalRatio)}</strong></div><div className="dimension-card static-card"><span>项目相关讨论</span><strong>{formatRatio(factorDetail.community_detail.structure_metrics.discussion?.projectRelevantRatio)}</strong></div><div className="dimension-card static-card"><span>问答互动占比</span><strong>{formatRatio(factorDetail.community_detail.structure_metrics.discussion?.qaInteractionRatio)}</strong></div></> : null}</div><div className="chip-row">{factorDetail.community_detail.quality_assessment?.activity_quality_score !== null && factorDetail.community_detail.quality_assessment?.activity_quality_score !== undefined ? <span className="chip opp-chip">活跃质量参考分 {factorDetail.community_detail.quality_assessment.activity_quality_score}</span> : null}{factorDetail.community_detail.quality_assessment?.discussion_effectiveness_score !== null && factorDetail.community_detail.quality_assessment?.discussion_effectiveness_score !== undefined ? <span className="chip opp-chip">讨论有效性参考分 {factorDetail.community_detail.quality_assessment.discussion_effectiveness_score}</span> : null}{factorDetail.community_detail.quality_assessment?.participation_depth_score !== null && factorDetail.community_detail.quality_assessment?.participation_depth_score !== undefined ? <span className="chip opp-chip">参与深度参考分 {factorDetail.community_detail.quality_assessment.participation_depth_score}</span> : null}{factorDetail.community_detail.quality_assessment?.bot_risk_score !== null && factorDetail.community_detail.quality_assessment?.bot_risk_score !== undefined ? <span className="chip risk-chip">异常风险参考分 {factorDetail.community_detail.quality_assessment.bot_risk_score}</span> : null}{factorDetail.community_detail.window_summary?.history_access_mode ? <span className="chip">{historyAccessModeLabel(factorDetail.community_detail.window_summary.history_access_mode)}</span> : null}</div>{factorDetail.community_detail.quality_assessment?.key_findings?.length ? <div className="chip-row">{factorDetail.community_detail.quality_assessment.key_findings.map((item) => <span key={item} className="chip">{item}</span>)}</div> : null}</section> : null}<div className="evidence-stack">{groupFactorEvidencesBySource(factorDetail.evidences).map((group) => <section key={group.key} className="evidence-group"><div className="panel-title-row"><h5>{group.title}</h5><span className="panel-tag">{group.items.length} 条</span></div><div className="evidence-stack">{group.items.map((evidence) => <div key={evidence.id} className="evidence-card"><span className="evidence-type">{evidenceTypeLabel(evidence.evidence_type)}</span><strong>{evidence.title ?? "Untitled evidence"}</strong><p>{evidence.summary ?? "No summary available."}</p>{evidence.insight_summary ? <p className="muted">{evidence.insight_summary}</p> : null}</div>)}</div></section>)}</div><div className="review-form"><h5>人工复核</h5><label><span>复核人</span><input value={reviewer} onChange={(event) => setReviewer(event.target.value)} /></label><label><span>修正分数</span><input value={overrideScore} onChange={(event) => setOverrideScore(event.target.value)} /></label><label><span>修正原因</span><input value={overrideReason} onChange={(event) => setOverrideReason(event.target.value)} /></label><label><span>事实补充</span><textarea value={factSupplement} onChange={(event) => setFactSupplement(event.target.value)} /></label><button type="button" className="submit-review" onClick={handleReviewFactor}>应用复核</button></div></> : <p className="muted">请选择一个因子查看详情。</p>}
-          </article>
-
-          <article className="panel version-panel">
-            <div className="panel-title-row"><h3>版本流转</h3><span className="panel-tag">{snapshot?.summary.versionCount ?? 0} 个版本</span></div>
-            <div className="version-list">{(snapshot?.versions ?? []).map((version) => <button key={version.id} type="button" className={`version-row ${selectedVersionId === version.id ? "is-selected" : ""}`} onClick={() => setSelectedVersionId(version.id)}><strong>{version.version_type}</strong><span>{new Date(version.created_at).toLocaleString()}</span></button>)}</div>
-            {versionDetail ? <div className="version-detail"><p className="muted">{versionDetail.report_snapshot?.summary}</p><div className="dimension-grid">{versionDetail.dimension_snapshot.map((dimension) => <div key={dimension.dimension_name} className="dimension-card static-card"><span>{dimension.dimension_name}</span><strong className={scoreTone(dimension.final_score)}>{dimension.final_score.toFixed(1)}</strong></div>)}</div></div> : null}
-            <div className="version-detail"><div className="panel-title-row"><h3>采集运行记录</h3><span className="panel-tag">{runs.length} 条</span></div><div className="version-list">{runs.map((run) => <div key={run.id} className="version-row"><strong>{collectorLabel(run.collector_key)} · {sourceStatusLabel(run.status)}</strong><span>{sourceTypeLabel(run.source_type)} | 证据 {run.evidence_count} 条 | 成功 {run.collected_count} | 跳过 {run.skipped_count}</span>{run.warnings.length ? <div className="chip-row">{run.warnings.map((warning) => <span key={warning} className="chip risk-chip">{warning}</span>)}</div> : null}</div>)}</div></div>
-          </article>
+              ) : (
+                <p className="muted">请选择一个三级因子查看分析内容。</p>
+              )}
+            </article>
+          )}
         </section>
+          </>
+        )}
       </section>
     </main>
   );

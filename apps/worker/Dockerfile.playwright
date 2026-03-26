@@ -1,0 +1,20 @@
+FROM mcr.microsoft.com/playwright:v1.58.0-jammy
+
+WORKDIR /app
+
+RUN corepack enable && corepack prepare pnpm@10.32.1 --activate
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
+COPY apps/api/package.json apps/api/package.json
+COPY apps/worker/package.json apps/worker/package.json
+COPY apps/web/package.json apps/web/package.json
+COPY packages/application/package.json packages/application/package.json
+COPY packages/shared/package.json packages/shared/package.json
+
+RUN pnpm install --frozen-lockfile
+
+COPY . .
+
+ENV NODE_ENV=production
+
+CMD ["pnpm", "dev:worker"]

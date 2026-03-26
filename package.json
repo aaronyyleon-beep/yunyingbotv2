@@ -6,7 +6,10 @@
   "scripts": {
     "dev:api": "pnpm --filter @yunyingbot/api dev",
     "dev:worker": "pnpm --filter @yunyingbot/worker dev",
-    "check": "pnpm -r typecheck"
+    "check": "pnpm -r typecheck",
+    "test": "tsx tests/pg-smoke-e2e.ts",
+    "stack:up": "docker compose up --build",
+    "stack:down": "docker compose down"
   },
   "devDependencies": {
     "@types/node": "^24.5.2",
