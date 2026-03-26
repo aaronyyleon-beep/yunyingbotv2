@@ -58,12 +58,12 @@ button {
   letter-spacing: 0.16em;
 }
 
-.task-list,
 .factor-list,
 .version-list,
 .evidence-stack,
 .chip-row,
-.intake-card {
+.intake-card,
+.hierarchy-stack {
   display: grid;
   gap: 12px;
 }
@@ -76,9 +76,184 @@ button {
   background: rgba(255, 255, 255, 0.02);
 }
 
+.hierarchy-card {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 20px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background:
+    linear-gradient(160deg, rgba(215, 255, 99, 0.05), rgba(255, 255, 255, 0.01)),
+    rgba(255, 255, 255, 0.02);
+}
+
+.hierarchy-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.hierarchy-toolbar .eyebrow {
+  margin: 0;
+}
+
+.hierarchy-toggle-all {
+  padding: 4px 10px;
+}
+
+.hierarchy-level1,
+.hierarchy-level2 {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.task-selector {
+  display: grid;
+  gap: 6px;
+}
+
+.task-selector span {
+  color: var(--muted);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.task-selector select {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text);
+  padding: 10px 12px;
+  font: inherit;
+}
+
+.hierarchy-level1 strong,
+.hierarchy-level2 strong {
+  font-family: "Chivo", sans-serif;
+  font-size: 18px;
+}
+
+.hierarchy-head,
+.task-card-heading {
+  display: grid;
+  gap: 4px;
+}
+
+.hierarchy-collapsible {
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  column-gap: 8px;
+}
+
+.hierarchy-collapsible .panel-tag,
+.hierarchy-collapsible strong {
+  grid-column: 1;
+}
+
+.hierarchy-toggle-mark {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  color: var(--muted);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.hierarchy-button {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.hierarchy-button:hover strong,
+.hierarchy-button:hover {
+  color: var(--signal);
+}
+
+.hierarchy-chip {
+  background: rgba(255, 255, 255, 0.02);
+}
+
 .intake-card label {
   display: grid;
   gap: 6px;
+}
+
+.intake-field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 10px;
+}
+
+.intake-field-area {
+  align-items: start;
+}
+
+.intake-side-action {
+  justify-self: end;
+  margin-bottom: 2px;
+}
+
+.intake-side-action:disabled {
+  opacity: 0.48;
+  cursor: not-allowed;
+}
+
+.intake-inline-action {
+  display: grid;
+  gap: 8px;
+  margin-top: -2px;
+  margin-bottom: 4px;
+}
+
+.file-picker {
+  display: grid;
+  gap: 6px;
+}
+
+.file-picker input[type="file"] {
+  width: 100%;
+  border: 1px dashed var(--line);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--muted);
+  padding: 10px 12px;
+  font: inherit;
+}
+
+.file-picker input[type="file"]::file-selector-button {
+  margin-right: 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+  padding: 6px 12px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.intake-inline-action .submit-review {
+  justify-self: start;
+}
+
+.intake-inline-action .submit-review:disabled {
+  opacity: 0.48;
+  cursor: not-allowed;
+}
+
+.intake-inline-action .muted {
+  margin: 0;
 }
 
 .intake-card span {
@@ -139,12 +314,6 @@ button {
   gap: 12px;
 }
 
-.task-card-actions {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
 .task-name,
 .factor-name {
   font-weight: 600;
@@ -197,6 +366,23 @@ button {
 .submit-review {
   color: var(--text);
   cursor: pointer;
+}
+
+.secondary-action {
+  background: transparent;
+  color: var(--muted);
+}
+
+.empty-state-card {
+  border: 1px dashed var(--line);
+  border-radius: 24px;
+  padding: 18px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.empty-state-card strong {
+  display: block;
+  margin-bottom: 6px;
 }
 
 .ghost-action {
@@ -479,6 +665,15 @@ button {
 @media (max-width: 1180px) {
   .shell {
     grid-template-columns: 1fr;
+  }
+
+  .intake-field {
+    grid-template-columns: 1fr;
+  }
+
+  .intake-side-action {
+    justify-self: start;
+    margin-bottom: 0;
   }
 
   .panel-grid {
