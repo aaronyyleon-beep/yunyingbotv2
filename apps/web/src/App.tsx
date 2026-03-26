@@ -721,6 +721,9 @@ export default function App() {
   const [factSupplement, setFactSupplement] = useState("");
   const [actionState, setActionState] = useState<string | null>(null);
   const [lastCollectionResult, setLastCollectionResult] = useState<CollectionActionResult | null>(null);
+  const [freshlyCollectedTaskIds, setFreshlyCollectedTaskIds] = useState<Set<string>>(new Set());
+  const [twitterQueueAtByTask, setTwitterQueueAtByTask] = useState<Record<string, string>>({});
+  const [activeActionPath, setActiveActionPath] = useState<string | null>(null);
   const [websiteInput, setWebsiteInput] = useState("https://docs.python.org/3/");
   const [docsInput, setDocsInput] = useState("https://nodejs.org/api/documentation.html");
   const [whitepaperFile, setWhitepaperFile] = useState<File | null>(null);
@@ -790,6 +793,22 @@ export default function App() {
     setFinalReport(finalReportPayload);
     setSources(sourcesPayload.items);
     setRuns(runsPayload.items);
+    const queuedAt = twitterQueueAtByTask[taskId];
+    if (queuedAt) {
+      const queuedAtMs = new Date(queuedAt).getTime();
+      const hasTwitterRunAfterQueue = runsPayload.items.some((run) =>
+        run.collector_key === "twitter_browser_fetch" &&
+        ["completed", "partial", "failed"].includes(run.status) &&
+        new Date(run.created_at).getTime() >= queuedAtMs
+      );
+      if (hasTwitterRunAfterQueue) {
+        setTwitterQueueAtByTask((current) => {
+          const next = { ...current };
+          delete next[taskId];
+          return next;
+        });
+      }
+    }
     setSelectedFactorId((current) =>
       snapshotPayload.factors.some((factor) => factor.id === current) ? (current ?? null) : (snapshotPayload.factors[0]?.id ?? null)
     );
@@ -832,6 +851,11 @@ export default function App() {
 
   const runAction = async (label: string, path: string) => {
     if (!selectedTaskId) return;
+    if (path === "analyze-factors" && !freshlyCollectedTaskIds.has(selectedTaskId)) {
+      setActionState("请先对当前任务执行至少一次采集，再运行分析，避免直接使用历史数据。");
+      return;
+    }
+    setActiveActionPath(path);
     setActionState(label);
     try {
       const response = await fetch(`/tasks/${selectedTaskId}/${path}`, { method: "POST" });
@@ -839,12 +863,31 @@ export default function App() {
       if (!response.ok) {
         throw new Error(typeof result.message === "string" ? result.message : typeof result.error === "string" ? result.error : "unknown_error");
       }
-      if (path !== "analyze-factors") setLastCollectionResult(normalizeCollectionResult(result));
+      if (path === "collect-twitter-browser") {
+        // Queueing is async; avoid keeping a persistent warning card that looks like an error.
+        setLastCollectionResult(null);
+        setTwitterQueueAtByTask((current) => ({ ...current, [selectedTaskId]: new Date().toISOString() }));
+      } else if (path !== "analyze-factors") {
+        setLastCollectionResult(normalizeCollectionResult(result));
+      }
+      if (path !== "analyze-factors") {
+        setFreshlyCollectedTaskIds((current) => {
+          const next = new Set(current);
+          next.add(selectedTaskId);
+          return next;
+        });
+      }
       await refreshSelectedTask(selectedTaskId);
       await refreshTasks();
-      setActionState(`${label.replace("正在", "").replace("...", "")}已刷新。`);
+      if (path === "collect-twitter-browser") {
+        setActionState("Twitter 浏览器采集任务已入队，Worker 正在异步处理。请稍后刷新采集记录。");
+      } else {
+        setActionState(`${label.replace("正在", "").replace("...", "")}已刷新。`);
+      }
     } catch (error) {
       setActionState(`${label.replace("正在", "").replace("...", "")}失败：${error instanceof Error ? error.message : "unknown_error"}`);
+    } finally {
+      setActiveActionPath(null);
     }
   };
 
@@ -1016,6 +1059,14 @@ export default function App() {
   const selectedDimensionFactors = (snapshot?.factors ?? []).filter((item) => item.dimension_name === selectedDimensionName);
   const selectableTasks = historyLoaded ? tasks : selectedTask ? [selectedTask] : [];
   const allExpanded = level1Expanded && expandedDimensions.size === TASK_HIERARCHY.level2.length;
+  const hasTask = Boolean(selectedTaskId);
+  const hasFreshCollection = Boolean(selectedTaskId && freshlyCollectedTaskIds.has(selectedTaskId));
+  const hasRunningCollectionRun = runs.some((run) => ["queued", "running"].includes(run.status));
+  const isTwitterQueued = Boolean(selectedTaskId && twitterQueueAtByTask[selectedTaskId]);
+  const collectionInProgress = (activeActionPath !== null && activeActionPath !== "analyze-factors") || hasRunningCollectionRun || isTwitterQueued;
+  const canRunAnalysis = hasTask && hasFreshCollection && !collectionInProgress;
+  const hasAnalysisResult = Boolean(finalReport || report?.report || (snapshot?.factors.length ?? 0) > 0);
+  const canReview = hasTask && hasAnalysisResult && !collectionInProgress;
 
   const handleToggleDimension = (dimensionName: string) => {
     setExpandedDimensions((current) => {
@@ -1048,24 +1099,18 @@ export default function App() {
         </div>
 
         <div className="intake-card">
-          <p className="eyebrow">New Intake</p>
+          <p className="eyebrow">Task Stages</p>
           <div className="intake-field">
             <label>
               <span>Website</span>
               <input value={websiteInput} onChange={(event) => setWebsiteInput(event.target.value)} />
             </label>
-            <button type="button" className="submit-review secondary-action intake-side-action" onClick={() => void runAction("正在采集公开页面...", "collect-public")} disabled={!selectedTaskId}>
-              采集页面
-            </button>
           </div>
           <div className="intake-field">
             <label>
               <span>Docs / Whitepaper</span>
               <input value={docsInput} onChange={(event) => setDocsInput(event.target.value)} />
             </label>
-            <button type="button" className="submit-review secondary-action intake-side-action" onClick={() => void runAction("正在采集公开页面...", "collect-public")} disabled={!selectedTaskId}>
-              采集文档
-            </button>
           </div>
           <div className="intake-inline-action">
             <label className="file-picker">
@@ -1080,15 +1125,6 @@ export default function App() {
             <p className="muted">
               Docs / Whitepaper 支持填写 URL，也支持直接上传 PDF 文件。{whitepaperFile ? ` 当前已选择：${whitepaperFile.name}` : " 当前未选择文件。"}
             </p>
-            <button
-              type="button"
-              className="submit-review secondary-action"
-              onClick={() => void runAction("正在解析 Whitepaper PDF...", "collect-whitepaper-pdf")}
-              disabled={!selectedTaskId}
-              title={selectedTaskId ? "解析当前任务中的 Whitepaper PDF" : "请先创建或选择一个任务"}
-            >
-              解析 Whitepaper PDF
-            </button>
             <p className="muted">{selectedTaskId ? "已选中任务，可直接解析 Whitepaper PDF。" : "先创建或选中任务后，才能解析 Whitepaper PDF。"}</p>
           </div>
           <div className="intake-field">
@@ -1096,27 +1132,18 @@ export default function App() {
               <span>Twitter / X</span>
               <input value={twitterInput} onChange={(event) => setTwitterInput(event.target.value)} />
             </label>
-            <button type="button" className="submit-review secondary-action intake-side-action" onClick={() => void runAction("正在通过浏览器采集 Twitter 页面...", "collect-twitter-browser")} disabled={!selectedTaskId}>
-              采集 Twitter
-            </button>
           </div>
           <div className="intake-field">
             <label>
               <span>Telegram</span>
               <input value={telegramInput} onChange={(event) => setTelegramInput(event.target.value)} />
             </label>
-            <button type="button" className="submit-review secondary-action intake-side-action" onClick={() => void runAction("正在采集 Telegram 社区...", "collect-telegram")} disabled={!selectedTaskId}>
-              采集 TG
-            </button>
           </div>
           <div className="intake-field">
             <label>
               <span>Discord</span>
               <input value={discordInput} onChange={(event) => setDiscordInput(event.target.value)} />
             </label>
-            <button type="button" className="submit-review secondary-action intake-side-action" onClick={() => void runAction("正在采集 Discord 社区...", "collect-discord")} disabled={!selectedTaskId}>
-              采集 Discord
-            </button>
           </div>
           <label>
             <span>Target Chain</span>
@@ -1135,18 +1162,77 @@ export default function App() {
                 placeholder={"每行一个合约地址，支持多个"}
               />
             </label>
-            <button type="button" className="submit-review secondary-action intake-side-action" onClick={() => void runAction("正在采集链上指标...", "collect-onchain")} disabled={!selectedTaskId}>
-              采集链上
-            </button>
           </div>
           <label>
             <span>Notes</span>
             <textarea value={notesInput} onChange={(event) => setNotesInput(event.target.value)} />
           </label>
-          <button type="button" className="submit-review" onClick={handleCreateTask} disabled={isCreatingTask}>
-            {isCreatingTask ? "创建中..." : "创建任务"}
-          </button>
-          <button type="button" className="submit-review secondary-action" onClick={() => void refreshTasks({ loadHistory: true })}>加载历史任务</button>
+
+          <div className="stage-gate-board">
+            <section className="stage-card">
+              <p className="panel-tag">阶段 0 · 任务初始化</p>
+              <p className="muted">先创建任务，再进入来源配置和采集阶段。</p>
+              <div className="stage-actions">
+                <button type="button" className="submit-review" onClick={handleCreateTask} disabled={isCreatingTask || collectionInProgress}>
+                  {isCreatingTask ? "创建中..." : "创建任务"}
+                </button>
+                <button type="button" className="submit-review secondary-action" onClick={() => void refreshTasks({ loadHistory: true })}>
+                  加载历史任务
+                </button>
+              </div>
+            </section>
+
+            <section className="stage-card">
+              <p className="panel-tag">阶段 1 · 来源配置</p>
+              <p className="muted">{hasTask ? "来源字段可编辑。修改后请先重新采集，再运行分析。" : "先创建或选择任务后再配置来源。"}</p>
+            </section>
+
+            <section className="stage-card">
+              <p className="panel-tag">阶段 2 · 采集执行</p>
+              <p className="muted">
+                {!hasTask
+                  ? "未选择任务，采集不可用。"
+                  : collectionInProgress
+                    ? "采集中或队列处理中，请等待当前采集结束。"
+                    : "按来源触发采集。Twitter 为异步队列。"}
+              </p>
+              <div className="stage-actions">
+                <button type="button" className="submit-review secondary-action" onClick={() => void runAction("正在采集公开页面...", "collect-public")} disabled={!hasTask || collectionInProgress}>采集页面</button>
+                <button type="button" className="submit-review secondary-action" onClick={() => void runAction("正在采集公开页面...", "collect-public")} disabled={!hasTask || collectionInProgress}>采集文档</button>
+                <button type="button" className="submit-review secondary-action" onClick={() => void runAction("正在解析 Whitepaper PDF...", "collect-whitepaper-pdf")} disabled={!hasTask || collectionInProgress}>解析 PDF</button>
+                <button type="button" className="submit-review secondary-action" onClick={() => void runAction("正在通过浏览器采集 Twitter 页面...", "collect-twitter-browser")} disabled={!hasTask || collectionInProgress}>采集 Twitter</button>
+                <button type="button" className="submit-review secondary-action" onClick={() => void runAction("正在采集 Telegram 社区...", "collect-telegram")} disabled={!hasTask || collectionInProgress}>采集 TG</button>
+                <button type="button" className="submit-review secondary-action" onClick={() => void runAction("正在采集 Discord 社区...", "collect-discord")} disabled={!hasTask || collectionInProgress}>采集 Discord</button>
+                <button type="button" className="submit-review secondary-action" onClick={() => void runAction("正在采集链上指标...", "collect-onchain")} disabled={!hasTask || collectionInProgress}>采集链上</button>
+              </div>
+            </section>
+
+            <section className="stage-card">
+              <p className="panel-tag">阶段 3 · 分析生成</p>
+              <p className="muted">{canRunAnalysis ? "已满足运行条件，可生成最新分析。" : "需先完成至少一次当前任务采集，且无进行中的采集。"} </p>
+              <div className="stage-actions">
+                <button type="button" className="submit-review" onClick={() => void runAction("正在运行分析...", "analyze-factors")} disabled={!canRunAnalysis}>运行分析</button>
+              </div>
+            </section>
+
+            <section className="stage-card">
+              <p className="panel-tag">阶段 4 · 人工复核</p>
+              <p className="muted">{canReview ? "可对当前选中三级因子提交人工复核。" : "需先有分析结果，且当前没有进行中的采集。"} </p>
+              <div className="stage-actions">
+                <button type="button" className="submit-review secondary-action" onClick={handleReviewFactor} disabled={!canReview || !selectedFactorId}>
+                  提交复核
+                </button>
+              </div>
+            </section>
+
+            <section className="stage-card">
+              <p className="panel-tag">阶段 5 · 发布冻结</p>
+              <p className="muted">发布版本入口预留，当前请以分析版本快照作为阶段性结果。</p>
+              <div className="stage-actions">
+                <button type="button" className="submit-review secondary-action" disabled title="发布流程即将支持">发布版本（即将支持）</button>
+              </div>
+            </section>
+          </div>
         </div>
 
         <section className="hierarchy-card">
@@ -1240,7 +1326,15 @@ export default function App() {
             <div className="metric-block"><span className="metric-label">Final Score</span><strong>{report?.report?.final_score?.toFixed(1) ?? "--"}</strong></div>
             <div className="metric-block"><span className="metric-label">Risk</span><strong>{report?.report?.risk_level ?? "--"}</strong></div>
             <div className="metric-block"><span className="metric-label">Evidence</span><strong>{snapshot?.summary.evidenceCount ?? 0}</strong></div>
-            <button type="button" className="hero-action" onClick={() => void runAction("正在运行分析...", "analyze-factors")}>运行分析</button>
+            <button
+              type="button"
+              className="hero-action"
+              onClick={() => void runAction("正在运行分析...", "analyze-factors")}
+              disabled={!canRunAnalysis}
+              title={!hasTask ? "请先选择任务" : canRunAnalysis ? "运行当前任务分析" : "需先完成一次当前任务采集，且无进行中的采集"}
+            >
+              运行分析
+            </button>
           </div>
         </header>
 

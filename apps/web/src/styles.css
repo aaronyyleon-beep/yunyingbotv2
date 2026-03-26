@@ -256,6 +256,31 @@ button {
   margin: 0;
 }
 
+.stage-gate-board {
+  display: grid;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.stage-card {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.015);
+}
+
+.stage-card .muted {
+  margin: 0;
+}
+
+.stage-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .intake-card span {
   color: var(--muted);
   font-size: 12px;
