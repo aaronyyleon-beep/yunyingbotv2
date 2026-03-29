@@ -4,6 +4,7 @@ import type { AppDbClient } from "../db/client.js";
 import { loadFactorsConfig } from "../config/load-factors.js";
 import { loadPromptTemplate } from "../prompts/load-prompt-template.js";
 import { updateTaskStatuses } from "../repositories/core-task-chain-repository.js";
+import { clearFreshEvidenceGateAfterAnalysis } from "../collection/fresh-evidence-gate.js";
 import { runFactorAnalysis } from "./run-factor-analysis.js";
 
 const nowIso = () => new Date().toISOString();
@@ -50,6 +51,17 @@ const runWithConcurrency = async <TInput, TOutput>(
 };
 
 export const analyzeFactorsPg = async (db: AppDbClient, repoRoot: string, taskId: string): Promise<AnalyzeFactorsResult> => {
+  const taskGate = await db.one<{ fresh_evidence_ready: boolean }>(
+    `SELECT fresh_evidence_ready FROM analysis_tasks WHERE id = $1`,
+    [taskId]
+  );
+  if (!taskGate) {
+    throw new Error("task_not_found");
+  }
+  if (!taskGate.fresh_evidence_ready) {
+    throw new Error("fresh_evidence_required");
+  }
+
   const factorsConfig = loadFactorsConfig(repoRoot);
   const promptTemplate = loadPromptTemplate(repoRoot, "analyze-factor");
   const evidenceRows = await db.query<{
@@ -139,6 +151,7 @@ export const analyzeFactorsPg = async (db: AppDbClient, repoRoot: string, taskId
     analysisStatus: "completed",
     taskStatus: "waiting_review"
   });
+  await clearFreshEvidenceGateAfterAnalysis(db, taskId);
 
   return {
     taskId,

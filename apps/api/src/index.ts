@@ -27,15 +27,24 @@ import {
   listTasks,
   loadRuntimeSnapshot,
   migratePostgres,
+  listTaskSourceBindings,
+  listTenantIntegrations,
+  listTenantTargets,
   reviewFactor,
   runOfflineAnalysis,
+  syncTaskSourcesPg,
   uploadWhitepaperDocumentPg,
+  upsertTaskSourceBinding,
+  upsertTenantIntegration,
+  upsertTenantTarget,
   upsertCommunityEvidence
 } from '@yunyingbot/application';
 import type { TaskInputPayload } from '@yunyingbot/shared';
 
 const PORT = Number(process.env.PORT ?? 3000);
 const INTAKE_DEDUP_WINDOW_MINUTES = Number(process.env.INTAKE_DEDUP_WINDOW_MINUTES ?? 10);
+const MIGRATE_ON_BOOT =
+  (process.env.MIGRATE_ON_BOOT ?? (process.env.NODE_ENV === 'production' ? 'false' : 'true')).toLowerCase() === 'true';
 const repoRoot = path.resolve(import.meta.dirname, '../../..');
 const db = getPostgresDatabase();
 
@@ -52,6 +61,19 @@ const readJsonBody = async <T>(req: http.IncomingMessage): Promise<T> => {
 
 const matchTaskRoute = (pathname: string, suffix: string): string | null => pathname.match(new RegExp(`^/tasks/([^/]+)/${suffix}$`))?.[1] ?? null;
 const sendPending = (res: http.ServerResponse, route: string) => sendJson(res, 409, { error: 'runtime_cutover_pending', message: `${route} is pending PostgreSQL migration.` });
+const SUPPORTED_INTEGRATION_PLATFORMS = new Set(['telegram', 'discord', 'twitter', 'onchain']);
+const sourceTypeToPlatform = (sourceType: string): string | null => {
+  if (sourceType === 'telegram') return 'telegram';
+  if (sourceType === 'discord') return 'discord';
+  if (sourceType === 'twitter') return 'twitter';
+  if (sourceType === 'onchain' || sourceType === 'contract') return 'onchain';
+  return null;
+};
+
+const getTaskTenantId = async (taskId: string): Promise<string | null> => {
+  const row = await db.one<{ project_id: string }>(`SELECT project_id FROM analysis_tasks WHERE id = $1`, [taskId]);
+  return row?.project_id ?? null;
+};
 
 const server = http.createServer(async (req, res) => {
   if (!req.url) return sendJson(res, 400, { error: 'missing_url' });
@@ -61,6 +83,57 @@ const server = http.createServer(async (req, res) => {
   if (req.method === 'GET' && url.pathname === '/runtime-snapshot') return sendJson(res, 200, loadRuntimeSnapshot(repoRoot));
   if (req.method === 'GET' && url.pathname === '/analysis/sample') return sendJson(res, 200, runOfflineAnalysis(repoRoot));
   if (req.method === 'GET' && url.pathname === '/tasks') return sendJson(res, 200, { items: await listTasks(db) });
+  if (req.method === 'GET' && url.pathname.match(/^\/tenants\/[^/]+\/integrations$/)) {
+    const tenantId = url.pathname.match(/^\/tenants\/([^/]+)\/integrations$/)?.[1];
+    if (!tenantId) return sendJson(res, 400, { error: 'invalid_tenant_id' });
+    try {
+      const integrations = await listTenantIntegrations(db, tenantId);
+      const targets = await listTenantTargets(db, { tenantId });
+      return sendJson(res, 200, { tenantId, integrations, targets });
+    } catch (error) {
+      return sendJson(res, 500, { error: 'list_tenant_integrations_failed', message: error instanceof Error ? error.message : 'unknown_error' });
+    }
+  }
+
+  const bindTenantTargetMatch = url.pathname.match(/^\/tenants\/([^/]+)\/integrations\/([^/]+)\/bind-target$/);
+  if (req.method === 'POST' && bindTenantTargetMatch) {
+    const [, tenantId, platform] = bindTenantTargetMatch;
+    if (!SUPPORTED_INTEGRATION_PLATFORMS.has(platform)) {
+      return sendJson(res, 400, { error: 'unsupported_platform', platform });
+    }
+    try {
+      const body = await readJsonBody<{
+        targetType: string;
+        targetId: string;
+        targetLabel?: string | null;
+        permissionsJson?: string | null;
+        integrationStatus?: 'active' | 'revoked' | 'expired';
+        targetStatus?: 'active' | 'revoked' | 'expired';
+        integrationMetadataJson?: string | null;
+      }>(req);
+      if (!body.targetType?.trim() || !body.targetId?.trim()) {
+        return sendJson(res, 400, { error: 'missing_target_fields', required: ['targetType', 'targetId'] });
+      }
+
+      const integration = await upsertTenantIntegration(db, {
+        tenantId,
+        platform: platform as 'telegram' | 'discord' | 'twitter' | 'onchain',
+        status: body.integrationStatus ?? 'active',
+        metadataJson: body.integrationMetadataJson ?? null
+      });
+      const target = await upsertTenantTarget(db, {
+        integrationId: integration.id,
+        targetType: body.targetType.trim(),
+        targetId: body.targetId.trim(),
+        targetLabel: body.targetLabel?.trim() || null,
+        permissionsJson: body.permissionsJson ?? null,
+        status: body.targetStatus ?? 'active'
+      });
+      return sendJson(res, 201, { tenantId, platform, integrationId: integration.id, tenantTargetId: target.id });
+    } catch (error) {
+      return sendJson(res, 500, { error: 'bind_tenant_target_failed', message: error instanceof Error ? error.message : 'unknown_error' });
+    }
+  }
 
   const deleteTaskId = url.pathname.match(/^\/tasks\/([^/]+)$/)?.[1] ?? null;
   if (req.method === 'DELETE' && deleteTaskId) {
@@ -119,7 +192,14 @@ const server = http.createServer(async (req, res) => {
       const version = await createVersionSnapshot(db, analyzeTaskId, 'ai_initial');
       return sendJson(res, 200, { factorResult, reportResult, version });
     } catch (error) {
-      return sendJson(res, 500, { error: 'analyze_factors_failed', message: error instanceof Error ? error.message : 'unknown_error' });
+      const message = error instanceof Error ? error.message : 'unknown_error';
+      if (message === 'fresh_evidence_required') {
+        return sendJson(res, 409, { error: 'fresh_evidence_required', message: 'No fresh collected evidence is available. Please run collection first.' });
+      }
+      if (message === 'task_not_found') {
+        return sendJson(res, 404, { error: 'task_not_found' });
+      }
+      return sendJson(res, 500, { error: 'analyze_factors_failed', message });
     }
   }
 
@@ -154,6 +234,28 @@ const server = http.createServer(async (req, res) => {
     try { return sendJson(res, 200, await collectDiscordMessages(db, repoRoot, collectDiscordTaskId)); } catch (error) { return sendJson(res, 500, { error: 'collect_discord_failed', message: error instanceof Error ? error.message : 'unknown_error' }); }
   }
 
+  const syncSourcesTaskId = matchTaskRoute(url.pathname, 'sync-sources');
+  if (req.method === 'POST' && syncSourcesTaskId) {
+    try {
+      const body = await readJsonBody<{
+        websiteUrl?: string | null;
+        docsUrl?: string | null;
+        twitterUrl?: string | null;
+        telegramUrl?: string | null;
+        discordUrl?: string | null;
+        contracts?: string[];
+        chain?: string | null;
+      }>(req);
+      return sendJson(res, 200, await syncTaskSourcesPg(db, syncSourcesTaskId, body));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'unknown_error';
+      if (message === 'task_not_found') {
+        return sendJson(res, 404, { error: 'task_not_found' });
+      }
+      return sendJson(res, 500, { error: 'sync_sources_failed', message });
+    }
+  }
+
   const reviewTaskId = matchTaskRoute(url.pathname, 'review-factor');
   if (req.method === 'POST' && reviewTaskId) {
     try {
@@ -182,6 +284,64 @@ const server = http.createServer(async (req, res) => {
     const [, taskId, sourceId] = sourceDetailMatch;
     const detail = await getSourceDetail(db, taskId, sourceId);
     return detail ? sendJson(res, 200, detail) : sendJson(res, 404, { error: 'source_not_found' });
+  }
+
+  const bindTaskSourceMatch = url.pathname.match(/^\/tasks\/([^/]+)\/sources\/([^/]+)\/bind-target$/);
+  if (req.method === 'POST' && bindTaskSourceMatch) {
+    const [, taskId, sourceId] = bindTaskSourceMatch;
+    try {
+      const body = await readJsonBody<{ tenantTargetId: string; bindingStatus?: 'active' | 'invalid' | 'revoked' }>(req);
+      if (!body.tenantTargetId?.trim()) return sendJson(res, 400, { error: 'missing_tenant_target_id' });
+
+      const source = await db.one<{ id: string; source_type: string }>(`SELECT id, source_type FROM sources WHERE id = $1 AND task_id = $2`, [sourceId, taskId]);
+      if (!source) return sendJson(res, 404, { error: 'source_not_found' });
+
+      const taskTenantId = await getTaskTenantId(taskId);
+      if (!taskTenantId) return sendJson(res, 404, { error: 'task_not_found' });
+
+      const targetTenant = await db.one<{ tenant_id: string; platform: string; target_status: string; integration_status: string }>(
+        `SELECT
+           i.tenant_id,
+           i.platform,
+           t.status AS target_status,
+           i.status AS integration_status
+         FROM tenant_targets t
+         JOIN tenant_integrations i ON i.id = t.integration_id
+         WHERE t.id = $1`,
+        [body.tenantTargetId.trim()]
+      );
+      if (!targetTenant) return sendJson(res, 404, { error: 'tenant_target_not_found' });
+      const expectedPlatform = sourceTypeToPlatform(source.source_type);
+      if (!expectedPlatform) return sendJson(res, 400, { error: 'source_type_not_bindable', sourceType: source.source_type });
+      if (targetTenant.platform !== expectedPlatform) {
+        return sendJson(res, 409, { error: 'platform_mismatch', sourceType: source.source_type, targetPlatform: targetTenant.platform, expectedPlatform });
+      }
+      if (targetTenant.tenant_id !== taskTenantId) {
+        return sendJson(res, 409, { error: 'tenant_mismatch', taskTenantId, targetTenantId: targetTenant.tenant_id });
+      }
+      if (targetTenant.target_status !== 'active' || targetTenant.integration_status !== 'active') {
+        return sendJson(res, 409, { error: 'tenant_target_not_active' });
+      }
+
+      const binding = await upsertTaskSourceBinding(db, {
+        taskId,
+        sourceId,
+        tenantTargetId: body.tenantTargetId.trim(),
+        bindingStatus: body.bindingStatus ?? 'active'
+      });
+      return sendJson(res, 201, { taskId, sourceId, tenantTargetId: body.tenantTargetId.trim(), bindingId: binding.id });
+    } catch (error) {
+      return sendJson(res, 500, { error: 'bind_task_source_failed', message: error instanceof Error ? error.message : 'unknown_error' });
+    }
+  }
+
+  const sourceBindingsTaskId = url.pathname.match(/^\/tasks\/([^/]+)\/source-bindings$/)?.[1] ?? null;
+  if (req.method === 'GET' && sourceBindingsTaskId) {
+    try {
+      return sendJson(res, 200, { items: await listTaskSourceBindings(db, sourceBindingsTaskId) });
+    } catch (error) {
+      return sendJson(res, 500, { error: 'list_source_bindings_failed', message: error instanceof Error ? error.message : 'unknown_error' });
+    }
   }
 
   const discoverLpCandidateMatch = url.pathname.match(/^\/tasks\/([^/]+)\/sources\/([^/]+)\/discover-lp-candidates$/);
@@ -240,7 +400,12 @@ const server = http.createServer(async (req, res) => {
 });
 
 const start = async () => {
-  await migratePostgres();
+  if (MIGRATE_ON_BOOT) {
+    await migratePostgres();
+    console.log('[api] PostgreSQL migrations applied (MIGRATE_ON_BOOT=true)');
+  } else {
+    console.log('[api] skipping migrations on boot (MIGRATE_ON_BOOT=false)');
+  }
   console.log('[api] PostgreSQL runtime enabled');
   server.listen(PORT, () => {
     console.log(`API server listening on http://localhost:${PORT}`);

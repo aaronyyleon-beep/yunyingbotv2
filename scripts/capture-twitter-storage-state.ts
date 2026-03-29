@@ -4,8 +4,7 @@ import readline from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright-core";
-import { resolveBrowserExecutablePath } from "../packages/application/src/collection/browser-runtime.js";
-import { resolveTwitterStorageStatePath } from "../packages/application/src/collection/twitter-storage-state.js";
+import { resolveBrowserExecutablePath, resolveTwitterStorageStatePath } from "@yunyingbot/application";
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(scriptDir, "..");

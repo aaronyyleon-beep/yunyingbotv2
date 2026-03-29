@@ -1,0 +1,539 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Intelligence Console · Next Step Workflow</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #07100f;
+        --panel: rgba(14, 25, 22, 0.84);
+        --panel-strong: rgba(20, 34, 30, 0.94);
+        --line: rgba(183, 224, 194, 0.22);
+        --line-soft: rgba(183, 224, 194, 0.12);
+        --text: #edf8ef;
+        --muted: #9db4a6;
+        --signal: #d8ff5f;
+        --mint: #9df2bf;
+        --warn: #ffbf4f;
+        --risk: #ff7a66;
+        --shadow: 0 22px 70px rgba(0, 0, 0, 0.35);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Plus Jakarta Sans", "PingFang SC", "Microsoft YaHei", sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(circle at 12% 8%, rgba(216, 255, 95, 0.12), transparent 30%),
+          radial-gradient(circle at 88% 78%, rgba(157, 242, 191, 0.13), transparent 34%),
+          linear-gradient(160deg, #07100f 0%, #061816 46%, #0a1312 100%);
+      }
+
+      .noise::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        opacity: 0.08;
+        background-image: radial-gradient(rgba(255, 255, 255, 0.6) 0.4px, transparent 0.4px);
+        background-size: 3px 3px;
+      }
+
+      .app {
+        width: min(1200px, calc(100% - 32px));
+        margin: 24px auto;
+        display: grid;
+        grid-template-columns: 360px 1fr;
+        gap: 16px;
+      }
+
+      .sidebar,
+      .main {
+        border: 1px solid var(--line-soft);
+        border-radius: 24px;
+        background: var(--panel);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(14px);
+      }
+
+      .sidebar {
+        padding: 18px;
+        display: grid;
+        gap: 12px;
+        align-content: start;
+      }
+
+      .brand {
+        border: 1px solid var(--line-soft);
+        border-radius: 18px;
+        padding: 14px;
+        background: linear-gradient(150deg, rgba(216, 255, 95, 0.08), transparent 60%);
+      }
+
+      .brand .eyebrow {
+        margin: 0;
+        color: var(--signal);
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        font-size: 11px;
+        font-weight: 700;
+      }
+
+      .brand h1 {
+        margin: 8px 0 4px;
+        font-family: "DM Serif Display", serif;
+        font-size: 30px;
+        font-weight: 400;
+        letter-spacing: 0.02em;
+      }
+
+      .muted {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.55;
+      }
+
+      .step-card {
+        border: 1px solid var(--line-soft);
+        border-radius: 16px;
+        padding: 12px;
+        display: grid;
+        gap: 8px;
+        background: rgba(255, 255, 255, 0.01);
+        transition: border-color .2s ease, transform .2s ease, background .2s ease;
+      }
+
+      .step-card.active {
+        border-color: rgba(216, 255, 95, 0.45);
+        background: linear-gradient(145deg, rgba(216, 255, 95, 0.12), rgba(255, 255, 255, 0.01));
+        transform: translateY(-1px);
+      }
+
+      .step-card.done {
+        border-color: rgba(157, 242, 191, 0.3);
+      }
+
+      .step-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .step-chip {
+        font-size: 11px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .step-title {
+        margin: 0;
+        font-size: 19px;
+        font-weight: 700;
+      }
+
+      .step-body {
+        display: none;
+      }
+
+      .step-card.active .step-body {
+        display: block;
+      }
+
+      .status-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #3e524a;
+      }
+
+      .step-card.active .status-dot {
+        background: var(--signal);
+        box-shadow: 0 0 0 6px rgba(216, 255, 95, 0.16);
+      }
+
+      .step-card.done .status-dot {
+        background: var(--mint);
+      }
+
+      .main {
+        padding: 20px;
+        display: grid;
+        gap: 14px;
+      }
+
+      .hero {
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        padding: 16px;
+        background:
+          linear-gradient(120deg, rgba(216, 255, 95, 0.12), rgba(255, 255, 255, 0) 40%),
+          rgba(255, 255, 255, 0.02);
+        display: grid;
+        gap: 12px;
+      }
+
+      .hero-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .hero h2 {
+        margin: 0;
+        font-size: 18px;
+      }
+
+      .progress-label {
+        color: var(--muted);
+        font-size: 12px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .progress-track {
+        width: 100%;
+        height: 10px;
+        border-radius: 999px;
+        border: 1px solid var(--line-soft);
+        background: rgba(255,255,255,0.03);
+        overflow: hidden;
+      }
+
+      .progress-fill {
+        width: 25%;
+        height: 100%;
+        border-radius: 999px;
+        background: linear-gradient(90deg, var(--signal), var(--mint));
+        transition: width .25s ease;
+      }
+
+      .blocker {
+        border: 1px solid rgba(255, 191, 79, 0.35);
+        border-radius: 14px;
+        padding: 12px;
+        background: rgba(255, 191, 79, 0.12);
+        display: grid;
+        gap: 8px;
+      }
+
+      .blocker strong {
+        font-size: 14px;
+      }
+
+      .actions {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .btn {
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 10px 16px;
+        color: var(--text);
+        background: rgba(255,255,255,0.03);
+        font: inherit;
+        cursor: pointer;
+        transition: transform .18s ease, border-color .18s ease, background .18s ease;
+      }
+
+      .btn:hover {
+        transform: translateY(-1px);
+        border-color: rgba(216,255,95,.55);
+      }
+
+      .btn.primary {
+        background: linear-gradient(100deg, rgba(216,255,95,.28), rgba(157,242,191,.19));
+        border-color: rgba(216,255,95,.6);
+        font-weight: 700;
+      }
+
+      .btn.warn {
+        border-color: rgba(255, 191, 79, .55);
+        background: rgba(255, 191, 79, .12);
+      }
+
+      details.more {
+        border: 1px solid var(--line-soft);
+        border-radius: 14px;
+        padding: 10px 12px;
+        background: rgba(255,255,255,0.015);
+      }
+
+      details.more summary {
+        cursor: pointer;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .grid {
+        margin-top: 10px;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .micro {
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .result {
+        border: 1px solid var(--line-soft);
+        border-radius: 16px;
+        padding: 14px;
+        background: var(--panel-strong);
+        display: grid;
+        gap: 10px;
+      }
+
+      .timeline {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        display: grid;
+        gap: 8px;
+      }
+
+      .timeline li {
+        border-left: 2px solid var(--line-soft);
+        padding-left: 10px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .timeline li strong {
+        color: var(--text);
+      }
+
+      @media (max-width: 980px) {
+        .app {
+          grid-template-columns: 1fr;
+        }
+
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body class="noise">
+    <div class="app">
+      <aside class="sidebar">
+        <section class="brand">
+          <p class="eyebrow">Intelligence Console</p>
+          <h1>产品基本面评估</h1>
+          <p class="muted">单按钮流程：创建任务 → 同步来源 → 数据采集 → 分析与复核。</p>
+        </section>
+
+        <article class="step-card active" data-step="1">
+          <div class="step-head">
+            <span class="step-chip">Step 1</span>
+            <span class="status-dot"></span>
+          </div>
+          <h3 class="step-title">任务信息</h3>
+          <div class="step-body">
+            <p class="muted">填写任务名称、目标项目、评估范围。</p>
+          </div>
+        </article>
+
+        <article class="step-card" data-step="2">
+          <div class="step-head">
+            <span class="step-chip">Step 2</span>
+            <span class="status-dot"></span>
+          </div>
+          <h3 class="step-title">来源配置</h3>
+          <div class="step-body">
+            <p class="muted">URL 变更后必须同步到当前任务，再允许采集。</p>
+          </div>
+        </article>
+
+        <article class="step-card" data-step="3">
+          <div class="step-head">
+            <span class="step-chip">Step 3</span>
+            <span class="status-dot"></span>
+          </div>
+          <h3 class="step-title">数据采集</h3>
+          <div class="step-body">
+            <p class="muted">默认采集公开页面，高级来源按需触发。</p>
+          </div>
+        </article>
+
+        <article class="step-card" data-step="4">
+          <div class="step-head">
+            <span class="step-chip">Step 4</span>
+            <span class="status-dot"></span>
+          </div>
+          <h3 class="step-title">分析与复核</h3>
+          <div class="step-body">
+            <p class="muted">先生成分析，再进入人工复核与版本确认。</p>
+          </div>
+        </article>
+      </aside>
+
+      <main class="main">
+        <section class="hero">
+          <div class="hero-top">
+            <h2>运行面板</h2>
+            <span class="progress-label" id="progressLabel">进度 1/4</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+
+          <div class="blocker">
+            <strong id="blockerTitle">当前卡点：Step 1 - 尚未创建任务</strong>
+            <p class="muted" id="blockerDesc">系统将为你创建一个新任务并切到来源配置阶段。</p>
+            <div class="actions">
+              <button class="btn primary" id="nextBtn">运行下一步：创建任务</button>
+              <button class="btn warn" id="syncBtn" style="display:none;">去同步</button>
+            </div>
+          </div>
+
+          <details class="more">
+            <summary>更多操作（低频）</summary>
+            <div class="grid">
+              <button class="btn">采集 TG</button>
+              <button class="btn">采集 Discord</button>
+              <button class="btn">采集链上</button>
+              <button class="btn">解析 PDF</button>
+            </div>
+          </details>
+        </section>
+
+        <section class="result">
+          <h3 style="margin:0;">执行记录</h3>
+          <ul class="timeline" id="timeline">
+            <li><strong>系统</strong> 已加载工作流，等待执行第一步。</li>
+          </ul>
+          <p class="micro">说明：这是一个前端原型页面，用于演示“单主按钮流程与门控状态”。</p>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      const state = {
+        step: 1,
+        sourceDirty: false,
+        collected: false,
+        analyzed: false
+      };
+
+      const copy = {
+        1: {
+          title: "当前卡点：Step 1 - 尚未创建任务",
+          desc: "系统将为你创建一个新任务并切到来源配置阶段。",
+          action: "运行下一步：创建任务"
+        },
+        2: {
+          title: "当前卡点：Step 2 - 你修改了来源但还未同步",
+          desc: "请先同步来源，避免采集到旧 URL 数据。",
+          action: "运行下一步：同步来源"
+        },
+        3: {
+          title: "当前卡点：Step 3 - 还未完成基础采集",
+          desc: "先跑公开页面采集，其他来源放在高级操作按需触发。",
+          action: "运行下一步：开始采集"
+        },
+        4: {
+          title: "当前卡点：Step 4 - 等待分析与复核",
+          desc: "先运行分析，再进入人工复核。",
+          action: "运行下一步：运行分析"
+        }
+      };
+
+      const progressLabel = document.getElementById("progressLabel");
+      const progressFill = document.getElementById("progressFill");
+      const blockerTitle = document.getElementById("blockerTitle");
+      const blockerDesc = document.getElementById("blockerDesc");
+      const nextBtn = document.getElementById("nextBtn");
+      const syncBtn = document.getElementById("syncBtn");
+      const timeline = document.getElementById("timeline");
+      const cards = [...document.querySelectorAll(".step-card")];
+
+      function log(msg) {
+        const li = document.createElement("li");
+        li.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong> ${msg}`;
+        timeline.prepend(li);
+      }
+
+      function render() {
+        progressLabel.textContent = `进度 ${state.step}/4`;
+        progressFill.style.width = `${(state.step / 4) * 100}%`;
+
+        cards.forEach((card, idx) => {
+          const step = idx + 1;
+          card.classList.toggle("active", state.step === step);
+          card.classList.toggle("done", state.step > step);
+        });
+
+        const c = copy[state.step];
+        blockerTitle.textContent = c.title;
+        blockerDesc.textContent = c.desc;
+
+        if (state.step === 2 && state.sourceDirty) {
+          nextBtn.textContent = "运行下一步：同步来源";
+          syncBtn.style.display = "inline-flex";
+        } else if (state.step === 4 && state.analyzed) {
+          blockerTitle.textContent = "流程完成：分析与复核已完成";
+          blockerDesc.textContent = "你可以再次点击主按钮重新触发复核，或在高级操作补采数据后重跑分析。";
+          nextBtn.textContent = "运行下一步：再次复核";
+          syncBtn.style.display = "none";
+        } else {
+          nextBtn.textContent = c.action;
+          syncBtn.style.display = "none";
+        }
+      }
+
+      nextBtn.addEventListener("click", () => {
+        if (state.step === 1) {
+          log("已创建任务 Analysis_Task_20260327_01");
+          state.step = 2;
+          state.sourceDirty = true;
+        } else if (state.step === 2) {
+          log("来源已同步到当前任务（website/docs/twitter）");
+          state.sourceDirty = false;
+          state.step = 3;
+        } else if (state.step === 3) {
+          log("基础采集完成：public_web_fetch（新证据 +12）");
+          state.collected = true;
+          state.step = 4;
+        } else if (state.step === 4 && !state.analyzed) {
+          log("分析完成：输出维度报告与复核入口");
+          state.analyzed = true;
+        } else {
+          log("已提交复核：因子状态更新为 reviewed");
+        }
+        render();
+      });
+
+      syncBtn.addEventListener("click", () => {
+        if (state.step === 2) {
+          state.sourceDirty = false;
+          log("手动同步成功：来源配置写回任务 source。")
+          render();
+        }
+      });
+
+      render();
+    </script>
+  </body>
+</html>

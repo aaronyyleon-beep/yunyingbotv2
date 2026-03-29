@@ -210,6 +210,30 @@ const run = async () => {
     const tasksPayload = await readJson<{ items: Array<{ id: string }> }>(await fetch(`${apiBaseUrl}/tasks`));
     assert.ok(tasksPayload.items.some((item) => item.id === createdTaskId), "created task should appear in /tasks");
 
+    const contractTypedIntakePayload = await readJson<{ taskId: string }>(
+      await fetch(`${apiBaseUrl}/tasks/intake`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          inputs: [
+            { type: "url", value: fixture.url },
+            { type: "contract", value: fixtureContractAddress },
+            { type: "text", value: "chain:base" },
+            { type: "text", value: `contract typed intake ${Date.now()}` }
+          ]
+        })
+      })
+    );
+    const contractTypedSourcesPayload = await readJson<{ items: Array<{ source_type: string; source_url: string }> }>(
+      await fetch(`${apiBaseUrl}/tasks/${contractTypedIntakePayload.taskId}/sources`)
+    );
+    assert.ok(
+      contractTypedSourcesPayload.items.some(
+        (item) => item.source_type === "contract" && item.source_url.toLowerCase() === fixtureContractAddress.toLowerCase()
+      ),
+      "intake should treat TaskInput type=contract as an onchain contract source"
+    );
+
     const collectPayload = await readJson<{ evidenceCount: number; collectedSources: string[] }>(
       await fetch(`${apiBaseUrl}/tasks/${createdTaskId}/collect-public`, { method: "POST" })
     );

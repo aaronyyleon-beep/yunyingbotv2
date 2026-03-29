@@ -6,3 +6,5 @@ dist
 *.log
 data/local/
 .tmp-*.ts
+
+.DS_Store

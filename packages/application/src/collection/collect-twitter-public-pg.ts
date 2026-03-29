@@ -1,7 +1,8 @@
 import type { PublicCollectionResult } from "@yunyingbot/shared";
 import type { AppDbClient } from "../db/client.js";
-import { insertEvidenceRecord, updateTaskStatuses } from "../repositories/core-task-chain-repository.js";
+import { insertEvidenceRecord } from "../repositories/core-task-chain-repository.js";
 import { recordCollectionRunPg } from "./record-collection-run-pg.js";
+import { applyCollectionHardGate } from "./fresh-evidence-gate.js";
 
 const TWITTER_FETCH_USER_AGENT =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
@@ -132,15 +133,20 @@ export const collectTwitterPublicPg = async (db: AppDbClient, taskId: string): P
     }
   }
 
-  if (evidenceCount > 0) {
-    await updateTaskStatuses(db, { taskId, collectionStatus: "evidence_ready" });
-  }
+  const runStatus: "completed" | "partial" | "failed" =
+    evidenceCount > 0 && skippedSources.length === 0 ? "completed" : evidenceCount > 0 ? "partial" : "failed";
+  await applyCollectionHardGate(db, {
+    taskId,
+    sourceTypes: ["twitter"],
+    status: runStatus,
+    evidenceCount
+  });
 
   await recordCollectionRunPg(db, {
     taskId,
     collectorKey: "twitter_public_fetch",
     sourceType: "twitter",
-    status: evidenceCount > 0 && skippedSources.length === 0 ? "completed" : evidenceCount > 0 ? "partial" : "failed",
+    status: runStatus,
     collectedCount: collectedSources.length,
     skippedCount: skippedSources.length,
     evidenceCount,

@@ -3,6 +3,7 @@ import type { PublicCollectionResult } from "@yunyingbot/shared";
 import type { AppDbClient } from "../db/client.js";
 import { upsertCommunityEvidence } from "../community/upsert-community-evidence.js";
 import { loadRepoEnv } from "../config/load-env.js";
+import { applyCollectionHardGate } from "./fresh-evidence-gate.js";
 
 type DiscordInviteResponse = {
   guild?: {
@@ -274,11 +275,13 @@ export const collectDiscordMessages = async (
 
   if (!token) {
     warnings.push("DISCORD_BOT_TOKEN is not configured.");
+    await applyCollectionHardGate(db, { taskId, sourceTypes: ["discord"], status: "failed", evidenceCount: 0 });
     return { taskId, collectedSources, skippedSources: sources.map((source) => source.source_url), warnings, evidenceCount };
   }
 
   if (sources.length === 0) {
     warnings.push("Current task has no Discord source.");
+    await applyCollectionHardGate(db, { taskId, sourceTypes: ["discord"], status: "failed", evidenceCount: 0 });
     return { taskId, collectedSources, skippedSources, warnings, evidenceCount };
   }
 
@@ -599,6 +602,15 @@ export const collectDiscordMessages = async (
       // no-op placeholder to keep branch explicit for future checkpointing
     }
   }
+
+  const runStatus: "completed" | "partial" | "failed" =
+    evidenceCount > 0 && skippedSources.length === 0 ? "completed" : evidenceCount > 0 ? "partial" : "failed";
+  await applyCollectionHardGate(db, {
+    taskId,
+    sourceTypes: ["discord"],
+    status: runStatus,
+    evidenceCount
+  });
 
   return {
     taskId,

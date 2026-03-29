@@ -187,7 +187,9 @@ export const createAnalysisTaskPg = async (
   inputs: TaskInputPayload[],
   dedupeWindowMinutes: number
 ) => {
-  const sourceCandidates = inputs.filter((input) => input.type === "url").map((input) => inferSource(input.value));
+  const sourceCandidates = inputs
+    .filter((input) => input.type === "url" || input.type === "contract")
+    .map((input) => inferSource(input.value));
   const inferredProjectName = inferProjectName(inputs, sourceCandidates).trim();
   const taskProjectName = `${TASK_NAME_PREFIX}${normalizeTaskNameToken(inferredProjectName)}`;
   const normalizedName = taskProjectName.toLowerCase();

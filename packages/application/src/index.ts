@@ -12,6 +12,10 @@ export { collectTwitterBrowser } from "./collection/collect-twitter-browser.js";
 export { collectTwitterBrowserPg } from "./collection/collect-twitter-browser-pg.js";
 export { collectTwitterPublic } from "./collection/collect-twitter-public.js";
 export { collectTwitterPublicPg } from "./collection/collect-twitter-public-pg.js";
+export { applyCollectionHardGate, clearFreshEvidenceGateAfterAnalysis } from "./collection/fresh-evidence-gate.js";
+export { recordCollectionRunPg } from "./collection/record-collection-run-pg.js";
+export { resolveBrowserExecutablePath } from "./collection/browser-runtime.js";
+export { resolveTwitterStorageStatePath } from "./collection/twitter-storage-state.js";
 export { confirmLpCandidate } from "./onchain/confirm-lp-candidate.js";
 export { confirmLpCandidatePg } from "./onchain/confirm-lp-candidate-pg.js";
 export { discoverLpCandidates } from "./onchain/discover-lp-candidates.js";
@@ -24,10 +28,12 @@ export { loadRuntimeSnapshot } from "./config/runtime-snapshot.js";
 export { getDatabase } from "./db/database.js";
 export { getPostgresDatabase } from "./db/postgres-client.js";
 export { migratePostgres } from "./db/postgres-migrate.js";
+export type { AppDbClient } from "./db/client.js";
 export { identifyProject } from "./identify/identify-project.js";
 export { inferProjectNameFromInputs } from "./identify/identify-project.js";
 export { createAnalysisTask } from "./intake/create-analysis-task.js";
 export { createAnalysisTaskPg } from "./intake/create-analysis-task-pg.js";
+export { syncTaskSourcesPg } from "./intake/sync-task-sources-pg.js";
 export { uploadWhitepaperDocumentPg } from "./intake/upload-whitepaper-document-pg.js";
 export { loadLlmRuntimeConfig } from "./llm/openai-compatible-client.js";
 export { createVersionSnapshot } from "./review/create-version-snapshot.js";
@@ -82,3 +88,11 @@ export {
   updateProjectIdentity,
   updateTaskStatuses
 } from "./repositories/core-task-chain-repository.js";
+export {
+  listTaskSourceBindings,
+  listTenantIntegrations,
+  listTenantTargets,
+  upsertTaskSourceBinding,
+  upsertTenantIntegration,
+  upsertTenantTarget
+} from "./repositories/tenant-authorization-repository.js";

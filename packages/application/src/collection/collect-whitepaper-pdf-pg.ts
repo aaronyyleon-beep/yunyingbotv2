@@ -3,8 +3,9 @@ import { fileURLToPath } from "node:url";
 import { PDFParse } from "pdf-parse";
 import type { PublicCollectionResult } from "@yunyingbot/shared";
 import type { AppDbClient } from "../db/client.js";
-import { insertEvidenceRecord, updateTaskStatuses } from "../repositories/core-task-chain-repository.js";
+import { insertEvidenceRecord } from "../repositories/core-task-chain-repository.js";
 import { recordCollectionRunPg } from "./record-collection-run-pg.js";
+import { applyCollectionHardGate } from "./fresh-evidence-gate.js";
 
 const MAX_WHITEPAPER_TEXT_LENGTH = 50000;
 const MAX_SECTION_TEXT_LENGTH = 3500;
@@ -282,18 +283,20 @@ export const collectWhitepaperPdfPg = async (db: AppDbClient, taskId: string): P
     }
   }
 
-  if (evidenceCount > 0) {
-    await updateTaskStatuses(db, {
-      taskId,
-      collectionStatus: "evidence_ready"
-    });
-  }
+  const runStatus: "completed" | "partial" | "failed" =
+    evidenceCount > 0 && skippedSources.length === 0 ? "completed" : evidenceCount > 0 ? "partial" : "failed";
+  await applyCollectionHardGate(db, {
+    taskId,
+    sourceTypes: ["whitepaper"],
+    status: runStatus,
+    evidenceCount
+  });
 
   await recordCollectionRunPg(db, {
     taskId,
     collectorKey: "whitepaper_pdf_parse",
     sourceType: "whitepaper",
-    status: evidenceCount > 0 && skippedSources.length === 0 ? "completed" : evidenceCount > 0 ? "partial" : "failed",
+    status: runStatus,
     collectedCount: collectedSources.length,
     skippedCount: skippedSources.length,
     evidenceCount,

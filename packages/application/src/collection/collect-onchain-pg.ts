@@ -3,6 +3,7 @@ import { loadRepoEnv } from "../config/load-env.js";
 import { createChatCompletion, loadLlmRuntimeConfig } from "../llm/openai-compatible-client.js";
 import { insertEvidenceRecord } from "../repositories/core-task-chain-repository.js";
 import { recordCollectionRunPg } from "./record-collection-run-pg.js";
+import { applyCollectionHardGate } from "./fresh-evidence-gate.js";
 
 const nowIso = () => new Date().toISOString();
 
@@ -208,6 +209,12 @@ export const collectOnchainPg = async (db: AppDbClient, repoRoot: string, taskId
 
   if (contractSources.length === 0) {
     warnings.push("当前任务没有合约来源，无法执行链上基础识别。");
+    await applyCollectionHardGate(db, {
+      taskId,
+      sourceTypes: ["contract"],
+      status: "failed",
+      evidenceCount: 0
+    });
     return { taskId, collectedContracts, skippedContracts, warnings, evidenceCount };
   }
 
@@ -270,6 +277,14 @@ export const collectOnchainPg = async (db: AppDbClient, repoRoot: string, taskId
     }
   }
 
-  await recordCollectionRunPg(db, { taskId, collectorKey: "onchain_rpc_provider", sourceType: "onchain", status: evidenceCount > 0 && skippedContracts.length === 0 ? "completed" : evidenceCount > 0 ? "partial" : "failed", collectedCount: collectedContracts.length, skippedCount: skippedContracts.length, evidenceCount, warnings });
+  const runStatus: "completed" | "partial" | "failed" =
+    evidenceCount > 0 && skippedContracts.length === 0 ? "completed" : evidenceCount > 0 ? "partial" : "failed";
+  await applyCollectionHardGate(db, {
+    taskId,
+    sourceTypes: ["contract"],
+    status: runStatus,
+    evidenceCount
+  });
+  await recordCollectionRunPg(db, { taskId, collectorKey: "onchain_rpc_provider", sourceType: "onchain", status: runStatus, collectedCount: collectedContracts.length, skippedCount: skippedContracts.length, evidenceCount, warnings });
   return { taskId, collectedContracts, skippedContracts, warnings, evidenceCount };
 };

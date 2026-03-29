@@ -3,6 +3,7 @@ import type { PublicCollectionResult } from "@yunyingbot/shared";
 import type { AppDbClient } from "../db/client.js";
 import { upsertCommunityEvidence } from "../community/upsert-community-evidence.js";
 import { loadRepoEnv } from "../config/load-env.js";
+import { applyCollectionHardGate } from "./fresh-evidence-gate.js";
 
 type TelegramChatResponse = {
   ok: boolean;
@@ -216,11 +217,13 @@ export const collectTelegramUpdates = async (db: AppDbClient, repoRoot: string, 
 
   if (!token) {
     warnings.push("TELEGRAM_BOT_TOKEN is not configured.");
+    await applyCollectionHardGate(db, { taskId, sourceTypes: ["telegram"], status: "failed", evidenceCount: 0 });
     return { taskId, collectedSources, skippedSources: sources.map((source) => source.source_url), warnings, evidenceCount };
   }
 
   if (sources.length === 0) {
     warnings.push("Current task has no Telegram source.");
+    await applyCollectionHardGate(db, { taskId, sourceTypes: ["telegram"], status: "failed", evidenceCount: 0 });
     return { taskId, collectedSources, skippedSources, warnings, evidenceCount };
   }
 
@@ -228,6 +231,7 @@ export const collectTelegramUpdates = async (db: AppDbClient, repoRoot: string, 
   const updatesPayload = (await updatesResponse.json()) as TelegramUpdatesResponse;
   if (!updatesPayload.ok || !Array.isArray(updatesPayload.result)) {
     warnings.push(`Telegram getUpdates failed: ${updatesPayload.description ?? "unknown_error"}`);
+    await applyCollectionHardGate(db, { taskId, sourceTypes: ["telegram"], status: "failed", evidenceCount: 0 });
     return { taskId, collectedSources, skippedSources: sources.map((source) => source.source_url), warnings, evidenceCount };
   }
 
@@ -504,6 +508,15 @@ export const collectTelegramUpdates = async (db: AppDbClient, repoRoot: string, 
   if (maxUpdateId > 0) {
     await fetch(`https://api.telegram.org/bot${token}/getUpdates?offset=${maxUpdateId + 1}&limit=1`);
   }
+
+  const runStatus: "completed" | "partial" | "failed" =
+    evidenceCount > 0 && skippedSources.length === 0 ? "completed" : evidenceCount > 0 ? "partial" : "failed";
+  await applyCollectionHardGate(db, {
+    taskId,
+    sourceTypes: ["telegram"],
+    status: runStatus,
+    evidenceCount
+  });
 
   return {
     taskId,

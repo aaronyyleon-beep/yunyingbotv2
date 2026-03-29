@@ -6,13 +6,27 @@
   "scripts": {
     "dev:api": "pnpm --filter @yunyingbot/api dev",
     "dev:worker": "pnpm --filter @yunyingbot/worker dev",
+    "worker:install-service": "bash scripts/setup-worker-launchd.sh",
+    "worker:remove-service": "bash scripts/remove-worker-launchd.sh",
+    "worker:status-service": "launchctl print gui/$(id -u)/com.yunyingbot.worker",
+    "worker:pm2:start": "pnpm dlx pm2 start /bin/zsh --name yunyingbot-worker -- -lc 'cd /Users/aaron/Desktop/yunyingbotv2 && set -a && source .env && set +a && pnpm --filter @yunyingbot/worker dev'",
+    "worker:pm2:restart": "pnpm dlx pm2 restart yunyingbot-worker",
+    "worker:pm2:stop": "pnpm dlx pm2 stop yunyingbot-worker",
+    "worker:pm2:delete": "pnpm dlx pm2 delete yunyingbot-worker",
+    "worker:pm2:status": "pnpm dlx pm2 status yunyingbot-worker",
+    "worker:pm2:logs": "pnpm dlx pm2 logs yunyingbot-worker --lines 100",
+    "worker:pm2:save": "pnpm dlx pm2 save",
     "twitter:login": "tsx scripts/capture-twitter-storage-state.ts",
     "check": "pnpm -r typecheck",
     "test": "tsx tests/pg-smoke-e2e.ts",
     "stack:up": "docker compose up --build",
+    "stack:up:daemon": "docker compose up -d --build",
+    "stack:logs:worker": "docker compose logs -f worker",
+    "stack:ps": "docker compose ps",
     "stack:down": "docker compose down"
   },
   "devDependencies": {
+    "@yunyingbot/application": "workspace:*",
     "@types/node": "^24.5.2",
     "tsx": "^4.20.3",
     "typescript": "^5.8.3"

@@ -1,10 +1,10 @@
 import type { PublicCollectionResult } from "@yunyingbot/shared";
 import {
+  applyCollectionHardGate,
   insertEvidenceRecord,
-  updateTaskStatuses
+  recordCollectionRunPg,
+  type AppDbClient,
 } from "@yunyingbot/application";
-import type { AppDbClient } from "../../../packages/application/src/db/client.js";
-import { recordCollectionRunPg } from "../../../packages/application/src/collection/record-collection-run-pg.js";
 
 const WEBSITE_PAGE_LIMIT = 30;
 const DOCS_PAGE_LIMIT = 50;
@@ -289,13 +289,20 @@ export const collectPublicDomain = async (db: AppDbClient, taskId: string): Prom
     }
   }
 
-  await updateTaskStatuses(db, { taskId, collectionStatus: "evidence_ready" });
+  const runStatus: "completed" | "partial" | "failed" =
+    evidenceCount > 0 && skippedSources.length === 0 ? "completed" : evidenceCount > 0 ? "partial" : "failed";
+  await applyCollectionHardGate(db, {
+    taskId,
+    sourceTypes: ["website", "docs", "whitepaper"],
+    status: runStatus,
+    evidenceCount
+  });
 
   await recordCollectionRunPg(db, {
     taskId,
     collectorKey: "public_web_fetch",
     sourceType: "website_docs",
-    status: warnings.length > 0 ? "partial" : "completed",
+    status: runStatus,
     collectedCount: collectedSources.length,
     skippedCount: skippedSources.length,
     evidenceCount,

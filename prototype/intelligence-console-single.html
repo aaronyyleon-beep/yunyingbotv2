@@ -1,0 +1,703 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Intelligence Console - Single HTML</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --background: #0b1219;
+        --foreground: #eaf1ff;
+        --card: #131d28;
+        --card-2: #101923;
+        --primary: #5fa0ff;
+        --primary-2: #7fc0ff;
+        --muted: #8da0b8;
+        --border: #253548;
+        --ok: #31c48d;
+        --warn: #f2b84a;
+        --bad: #f2726a;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        color: var(--foreground);
+        font-family: "Manrope", "Noto Sans SC", sans-serif;
+        background:
+          radial-gradient(circle at 0% 0%, rgba(95,160,255,0.15), transparent 34%),
+          radial-gradient(circle at 100% 100%, rgba(49,196,141,0.12), transparent 30%),
+          var(--background);
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: 280px 1fr 320px;
+        gap: 12px;
+        width: min(1480px, calc(100% - 24px));
+        margin: 12px auto;
+        height: calc(100vh - 24px);
+      }
+
+      .panel {
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0)), var(--card);
+        overflow: hidden;
+      }
+
+      .left, .center, .right { display: flex; flex-direction: column; min-height: 0; }
+
+      .head {
+        padding: 14px;
+        border-bottom: 1px solid var(--border);
+        background: rgba(0,0,0,.15);
+      }
+
+      .title { margin: 0; font-size: 15px; font-weight: 700; }
+      .sub { margin: 4px 0 0; font-size: 11px; color: var(--muted); }
+
+      .left .body, .center .body, .right .body {
+        padding: 12px;
+        overflow: auto;
+        min-height: 0;
+      }
+
+      .btn {
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: rgba(255,255,255,.03);
+        color: var(--foreground);
+        font: inherit;
+        font-size: 12px;
+        padding: 8px 10px;
+        cursor: pointer;
+      }
+
+      .btn:hover { border-color: var(--primary); }
+      .btn:disabled { opacity: .45; cursor: not-allowed; }
+
+      .btn.primary {
+        background: linear-gradient(100deg, rgba(95,160,255,.30), rgba(127,192,255,.20));
+        border-color: rgba(127,192,255,.6);
+        font-weight: 700;
+      }
+
+      .task-create-btn {
+        position: relative;
+        overflow: hidden;
+        border: 0.6px solid #343b4f;
+        border-radius: 7px;
+        background: #0b1739;
+        color: #aeb9e1;
+        font-family: "Mona Sans", "Noto Sans SC", sans-serif;
+        font-size: 12px;
+        font-weight: 500;
+        padding: 10px 12px 9px;
+        cursor: pointer;
+        transition: background .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease;
+        box-shadow: 0 2px 12px rgba(11, 22, 44, 0.05);
+      }
+
+      .task-create-btn:hover {
+        background: #13234d;
+      }
+
+      .task-create-btn.is-active {
+        background: #0a1330;
+        border-color: #cb3cff;
+        color: #ffffff;
+        box-shadow: 0 2px 12px rgba(203, 60, 255, 0.15);
+      }
+
+      .task-create-btn.is-active::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 3px;
+        background: #cb3cff;
+      }
+
+      .task-item {
+        width: 100%;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 10px;
+        text-align: left;
+        margin-bottom: 8px;
+        background: var(--card-2);
+        color: var(--foreground);
+        cursor: pointer;
+      }
+
+      .task-item.active { border-color: rgba(95,160,255,.7); background: rgba(95,160,255,.08); }
+      .task-name { margin: 0; font-size: 12px; font-weight: 700; }
+      .task-meta { margin: 4px 0 0; font-size: 10px; color: var(--muted); }
+
+      .stage-wrap {
+        display: grid;
+        gap: 10px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px;
+        margin-bottom: 12px;
+        background: rgba(255,255,255,.02);
+      }
+
+      .progress-row { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); }
+      .track { height: 8px; border-radius: 999px; border: 1px solid var(--border); background: #0e1620; overflow: hidden; }
+      .fill { height: 100%; width: 25%; background: linear-gradient(90deg, var(--primary), var(--primary-2)); transition: width .25s ease; }
+
+      .steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+      .step { border: 1px solid var(--border); border-radius: 10px; padding: 8px; font-size: 11px; color: var(--muted); }
+      .step.active { border-color: rgba(95,160,255,.7); color: var(--foreground); background: rgba(95,160,255,.10); }
+      .step.done { border-color: rgba(49,196,141,.45); color: #bbefd9; }
+
+      .gate {
+        border: 1px solid rgba(242,184,74,.45);
+        background: rgba(242,184,74,.10);
+        border-radius: 10px;
+        padding: 10px;
+      }
+
+      .gate h4 { margin: 0 0 4px; font-size: 12px; color: #ffd38d; }
+      .gate p { margin: 0; font-size: 12px; color: var(--muted); }
+
+      .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+      .tabs { display: flex; gap: 6px; margin-bottom: 10px; }
+      .tab { padding: 8px 10px; border: 1px solid var(--border); border-radius: 10px; font-size: 12px; background: rgba(255,255,255,.02); color: var(--muted); cursor: pointer; }
+      .tab.active { color: var(--foreground); border-color: rgba(95,160,255,.7); background: rgba(95,160,255,.08); }
+
+      .card {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 10px;
+        background: rgba(255,255,255,.02);
+        margin-bottom: 8px;
+      }
+
+      .label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 6px; }
+      input, textarea, select {
+        width: 100%;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: #0e1620;
+        color: var(--foreground);
+        padding: 8px 10px;
+        font: inherit;
+        font-size: 12px;
+      }
+      textarea { min-height: 72px; resize: vertical; }
+
+      .source-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+      .source-grid .full { grid-column: span 2; }
+
+      .pill { display: inline-flex; align-items: center; padding: 3px 8px; border-radius: 999px; font-size: 10px; border: 1px solid var(--border); }
+      .pill.ok { color: #9af3cd; border-color: rgba(49,196,141,.5); background: rgba(49,196,141,.10); }
+      .pill.warn { color: #ffd38d; border-color: rgba(242,184,74,.5); background: rgba(242,184,74,.10); }
+      .pill.bad { color: #ffb0a8; border-color: rgba(242,114,106,.5); background: rgba(242,114,106,.10); }
+
+      table { width: 100%; border-collapse: collapse; }
+      th, td { border-bottom: 1px solid var(--border); text-align: left; font-size: 11px; padding: 8px 4px; }
+      th { color: var(--muted); font-weight: 600; }
+
+      .right h3 { margin: 0; font-size: 13px; }
+      .kpi { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+      .kpi .card h4 { margin: 0 0 2px; font-size: 11px; color: var(--muted); }
+      .kpi .card strong { font-size: 20px; }
+
+      .log { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+      .log li { border-left: 2px solid var(--border); padding-left: 8px; font-size: 12px; color: var(--muted); }
+      .log li strong { color: var(--foreground); }
+
+      details summary { cursor: pointer; font-size: 12px; color: var(--muted); }
+
+      .hidden { display: none; }
+
+      @media (max-width: 1180px) {
+        .layout { grid-template-columns: 1fr; height: auto; }
+        .left, .center, .right { min-height: 320px; }
+        .source-grid { grid-template-columns: 1fr; }
+        .source-grid .full { grid-column: span 1; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <aside class="panel left">
+        <div class="head">
+          <p class="title">Intelligence Console</p>
+          <p class="sub">Task List · Mock Mode</p>
+          <div class="row" style="margin-top:8px;">
+            <div id="newTaskBtnSlot"></div>
+          </div>
+        </div>
+        <div class="body">
+          <button class="task-item active">
+            <p class="task-name">EigenLayer</p>
+            <p class="task-meta">task-1 · stage: 分析中</p>
+          </button>
+          <button class="task-item">
+            <p class="task-name">Monad</p>
+            <p class="task-meta">task-2 · stage: 来源配置</p>
+          </button>
+          <button class="task-item">
+            <p class="task-name">Movement</p>
+            <p class="task-meta">task-3 · stage: 待创建</p>
+          </button>
+        </div>
+      </aside>
+
+      <section class="panel center">
+        <div class="head">
+          <p class="title">EigenLayer · 产品基本面评估</p>
+          <p class="sub">单主按钮流程：同步来源 / 采集 / 分析 / 复核</p>
+        </div>
+        <div class="body">
+          <section class="stage-wrap">
+            <div class="progress-row">
+              <span id="stepText">Step 1/4</span>
+              <span id="nextText">下一步：同步来源</span>
+            </div>
+            <div class="track"><div class="fill" id="fill"></div></div>
+            <div class="steps">
+              <div class="step active" data-step="1">Step 1<br/>任务信息</div>
+              <div class="step" data-step="2">Step 2<br/>来源配置</div>
+              <div class="step" data-step="3">Step 3<br/>数据采集</div>
+              <div class="step" data-step="4">Step 4<br/>分析与复核</div>
+            </div>
+            <div class="gate">
+              <h4 id="gateTitle">当前卡点：你修改了来源但还未同步</h4>
+              <p id="gateDesc">请先同步来源到任务，再执行采集，避免抓旧链接。</p>
+            </div>
+            <div class="row">
+              <button class="btn primary" id="runNextBtn">运行下一步：同步来源</button>
+              <button class="btn" id="syncBtn">去同步</button>
+              <details>
+                <summary>高级操作（手动采集某个来源）</summary>
+                <div class="row" style="margin-top:8px;">
+                  <button class="btn" data-manual="twitter">采集 Twitter</button>
+                  <button class="btn" data-manual="telegram">采集 TG</button>
+                  <button class="btn" data-manual="discord">采集 Discord</button>
+                  <button class="btn" data-manual="chain">采集链上</button>
+                  <button class="btn" data-manual="whitepaper">解析 PDF</button>
+                </div>
+              </details>
+            </div>
+          </section>
+
+          <div class="tabs">
+            <button class="tab active" data-tab="sources">来源配置</button>
+            <button class="tab" data-tab="collection">采集控制</button>
+            <button class="tab" data-tab="analysis">分析报告</button>
+          </div>
+
+          <section id="panel-sources">
+            <div class="card">
+              <div class="row" style="justify-content: space-between; margin-bottom: 8px;">
+                <div>
+                  <div class="label">TaskSources</div>
+                  <strong style="font-size:13px;">来源配置（保留字段）</strong>
+                </div>
+                <span class="pill warn" id="syncState">未同步</span>
+              </div>
+              <div class="source-grid">
+                <div>
+                  <div class="label">website</div>
+                  <input id="website" value="https://www.eigenlayer.xyz" />
+                </div>
+                <div>
+                  <div class="label">docs</div>
+                  <input id="docs" value="https://docs.eigenlayer.xyz" />
+                </div>
+                <div>
+                  <div class="label">whitepaper</div>
+                  <input id="whitepaper" value="https://docs.eigenlayer.xyz/whitepaper.pdf" />
+                </div>
+                <div>
+                  <div class="label">twitter</div>
+                  <input id="twitter" value="https://x.com/eigenlayer" />
+                </div>
+                <div>
+                  <div class="label">telegram</div>
+                  <input id="telegram" value="https://t.me/eigenlayer" />
+                </div>
+                <div>
+                  <div class="label">discord</div>
+                  <input id="discord" value="https://discord.gg/eigenlayer" />
+                </div>
+                <div>
+                  <div class="label">chain</div>
+                  <input id="chain" value="Ethereum Mainnet" />
+                </div>
+                <div>
+                  <div class="label">contracts</div>
+                  <textarea id="contracts">0xA0b8...1
+0xBEEF...2</textarea>
+                </div>
+                <div class="full">
+                  <div class="label">notes</div>
+                  <textarea id="notes">重点关注 AVS 经济模型与质押风险外溢。</textarea>
+                </div>
+              </div>
+              <div class="row" style="margin-top: 10px;">
+                <button class="btn" id="saveSourcesBtn">同步来源到任务</button>
+                <span class="sub">配置变更后必须同步，采集才使用新值。</span>
+              </div>
+            </div>
+          </section>
+
+          <section id="panel-collection" class="hidden">
+            <div class="card">
+              <div class="row" style="justify-content: space-between; margin-bottom: 8px;">
+                <div>
+                  <div class="label">CollectionRun</div>
+                  <strong style="font-size:13px;">采集控制（保留字段）</strong>
+                </div>
+                <span class="pill" id="collectPill">idle</span>
+              </div>
+              <div class="row" style="margin-bottom: 8px;">
+                <button class="btn" id="collectAllBtn">一键全量采集</button>
+                <span class="sub">source: website/docs/whitepaper/twitter/telegram/discord/chain</span>
+              </div>
+              <table>
+                <thead>
+                  <tr><th>source</th><th>status</th><th>startedAt</th><th>itemCount</th><th>操作</th></tr>
+                </thead>
+                <tbody id="runRows"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section id="panel-analysis" class="hidden">
+            <div class="card">
+              <div class="row" style="justify-content: space-between;">
+                <div>
+                  <div class="label">AnalysisReport</div>
+                  <strong style="font-size:13px;">综合报告（保留字段）</strong>
+                </div>
+                <button class="btn" id="analyzeBtn">运行因子分析</button>
+              </div>
+              <div class="kpi" style="margin-top: 10px;">
+                <div class="card"><h4>overallScore</h4><strong id="overallScore">6.3</strong></div>
+                <div class="card"><h4>overallLabel</h4><strong id="overallLabel">mid</strong></div>
+                <div class="card"><h4>recommendation</h4><strong id="recommendation">watch</strong></div>
+              </div>
+              <div class="card" style="margin-top: 8px;">
+                <div class="label">keyIssues</div>
+                <ul class="log" id="issuesList">
+                  <li>Sequencer 中心化风险仍高。</li>
+                  <li>主网二审尚未公开披露。</li>
+                </ul>
+              </div>
+              <div class="card">
+                <div class="label">keyEvidence</div>
+                <ul class="log" id="evidenceList">
+                  <li>GitHub 连续 180 天活跃提交。</li>
+                  <li>社区规模 30 日增长显著。</li>
+                </ul>
+              </div>
+              <div class="card">
+                <div class="label">conclusion</div>
+                <p id="conclusion" class="sub" style="font-size:12px; color:#d6e1ef;">基本面中等偏上，建议持续观察并等待二审完成。</p>
+              </div>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <aside class="panel right">
+        <div class="head">
+          <p class="title">人工复核</p>
+          <p class="sub">ReviewSubmission · human_revised</p>
+        </div>
+        <div class="body">
+          <div class="card">
+            <div class="label">factorId</div>
+            <select id="factorId">
+              <option value="team-background">核心成员背景</option>
+              <option value="tech-audit">安全审计状态</option>
+              <option value="comm-engagement">社区参与质量</option>
+            </select>
+          </div>
+          <div class="card">
+            <div class="label">reviewer</div>
+            <input id="reviewer" value="alice@fund.io" />
+          </div>
+          <div class="card">
+            <div class="label">overrideScore</div>
+            <input id="overrideScore" type="range" min="0" max="10" step="0.5" value="6.5" />
+            <p class="sub">当前分数：<strong id="scoreText" style="color:#fff">6.5</strong></p>
+          </div>
+          <div class="card">
+            <div class="label">reason</div>
+            <textarea id="reason">交叉核验来源后，部分官方说法可信度下降，评分下调。</textarea>
+          </div>
+          <div class="row">
+            <button class="btn" id="submitReviewBtn">提交复核</button>
+            <span class="pill" id="reviewState">pending_review</span>
+          </div>
+          <div class="card" style="margin-top: 12px;">
+            <div class="label">执行日志</div>
+            <ul class="log" id="timeline">
+              <li><strong>系统</strong> 初始化完成，等待“运行下一步”。</li>
+            </ul>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <script>
+      const state = {
+        step: 2,
+        sourcesSynced: false,
+        hasFreshData: false,
+        analysisDone: false,
+        reviewDone: false,
+        runs: []
+      };
+
+      function createTaskButton({ id, label, active = false }) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.id = id;
+        button.className = `task-create-btn${active ? ' is-active' : ''}`;
+        button.textContent = label;
+        return button;
+      }
+
+      const runRows = document.getElementById('runRows');
+      const collectPill = document.getElementById('collectPill');
+      const syncState = document.getElementById('syncState');
+      const reviewState = document.getElementById('reviewState');
+      const timeline = document.getElementById('timeline');
+      const newTaskBtnSlot = document.getElementById('newTaskBtnSlot');
+
+      const newTaskBtn = createTaskButton({
+        id: 'newTaskBtn',
+        label: '+ 新建分析任务',
+        active: false
+      });
+      newTaskBtnSlot.appendChild(newTaskBtn);
+
+      function log(message) {
+        const li = document.createElement('li');
+        li.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong> ${message}`;
+        timeline.prepend(li);
+      }
+
+      function renderStages() {
+        const steps = document.querySelectorAll('.step');
+        steps.forEach((node, idx) => {
+          const s = idx + 1;
+          node.classList.toggle('active', s === state.step);
+          node.classList.toggle('done', s < state.step);
+        });
+
+        document.getElementById('stepText').textContent = `Step ${state.step}/4`;
+        document.getElementById('fill').style.width = `${state.step * 25}%`;
+
+        let title = '当前卡点：你修改了来源但还未同步';
+        let desc = '请先同步来源到任务，再执行采集，避免抓旧链接。';
+        let action = '运行下一步：同步来源';
+
+        if (state.step === 3) {
+          title = '当前卡点：尚未完成 fresh 数据采集';
+          desc = '请先采集公开来源，满足分析门控。';
+          action = '运行下一步：开始采集';
+        }
+        if (state.step === 4 && !state.analysisDone) {
+          title = '当前卡点：尚未运行分析';
+          desc = '采集完成后才能运行因子分析。';
+          action = '运行下一步：运行分析';
+        }
+        if (state.step === 4 && state.analysisDone && !state.reviewDone) {
+          title = '当前卡点：尚未提交复核';
+          desc = '请提交人工复核，形成 human_revised 版本。';
+          action = '运行下一步：提交复核';
+        }
+        if (state.reviewDone) {
+          title = '流程完成：当前任务已复核';
+          desc = '你可继续执行高级操作补采数据并重跑分析。';
+          action = '运行下一步：再次复核';
+        }
+
+        document.getElementById('gateTitle').textContent = title;
+        document.getElementById('gateDesc').textContent = desc;
+        document.getElementById('runNextBtn').textContent = action;
+        document.getElementById('nextText').textContent = action.replace('运行下一步：', '下一步：');
+
+        syncState.className = `pill ${state.sourcesSynced ? 'ok' : 'warn'}`;
+        syncState.textContent = state.sourcesSynced ? '已同步' : '未同步';
+
+        reviewState.className = `pill ${state.reviewDone ? 'ok' : 'warn'}`;
+        reviewState.textContent = state.reviewDone ? 'reviewed' : 'pending_review';
+      }
+
+      function renderRuns() {
+        runRows.innerHTML = '';
+        if (!state.runs.length) {
+          runRows.innerHTML = '<tr><td colspan="5" style="color:var(--muted);">暂无采集记录</td></tr>';
+          collectPill.textContent = 'idle';
+          collectPill.className = 'pill';
+          return;
+        }
+        state.runs.forEach((run, index) => {
+          const tr = document.createElement('tr');
+          const cls = run.status === 'completed' ? 'ok' : run.status === 'failed' ? 'bad' : 'warn';
+          tr.innerHTML = `<td>${run.source}</td><td><span class="pill ${cls}">${run.status}</span></td><td>${run.startedAt}</td><td>${run.itemCount ?? '--'}</td><td><button class="btn" data-rerun="${index}">重采</button></td>`;
+          runRows.appendChild(tr);
+        });
+
+        const allCompleted = state.runs.every((r) => r.status === 'completed');
+        if (allCompleted) {
+          collectPill.textContent = 'completed';
+          collectPill.className = 'pill ok';
+        } else {
+          collectPill.textContent = 'running';
+          collectPill.className = 'pill warn';
+        }
+      }
+
+      function simulateCollect(sources) {
+        const now = new Date().toLocaleTimeString();
+        state.runs = sources.map((source, idx) => ({
+          source,
+          status: idx < 2 ? 'running' : 'queued',
+          startedAt: now,
+          itemCount: undefined
+        }));
+        renderRuns();
+        log(`采集任务已入队：${sources.join(', ')}`);
+
+        setTimeout(() => {
+          state.runs = state.runs.map((r) => ({ ...r, status: 'completed', itemCount: Math.floor(Math.random() * 180) + 20 }));
+          state.hasFreshData = true;
+          renderRuns();
+          log('采集完成：fresh 数据可用于分析。');
+          if (state.step < 4) state.step = 4;
+          renderStages();
+        }, 1200);
+      }
+
+      document.querySelectorAll('[data-tab]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.tab').forEach((n) => n.classList.remove('active'));
+          btn.classList.add('active');
+          const tab = btn.getAttribute('data-tab');
+          ['sources', 'collection', 'analysis'].forEach((name) => {
+            document.getElementById(`panel-${name}`).classList.toggle('hidden', name !== tab);
+          });
+        });
+      });
+
+      document.getElementById('saveSourcesBtn').addEventListener('click', () => {
+        state.sourcesSynced = true;
+        if (state.step < 3) state.step = 3;
+        log('来源配置已同步到当前任务。');
+        renderStages();
+      });
+
+      document.getElementById('syncBtn').addEventListener('click', () => {
+        state.sourcesSynced = true;
+        if (state.step < 3) state.step = 3;
+        log('执行唯一动作：去同步。');
+        renderStages();
+      });
+
+      document.getElementById('collectAllBtn').addEventListener('click', () => {
+        if (!state.sourcesSynced) {
+          log('采集被拦截：来源未同步。');
+          return;
+        }
+        simulateCollect(['website', 'docs', 'whitepaper', 'twitter', 'telegram', 'discord', 'chain']);
+      });
+
+      document.querySelectorAll('[data-manual]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const source = btn.getAttribute('data-manual');
+          if (!state.sourcesSynced) {
+            log(`手动采集 ${source} 被拦截：来源未同步。`);
+            return;
+          }
+          simulateCollect([source]);
+        });
+      });
+
+      document.getElementById('analyzeBtn').addEventListener('click', () => {
+        if (!state.hasFreshData) {
+          log('分析被拦截：尚无 fresh 数据。');
+          return;
+        }
+        state.analysisDone = true;
+        state.step = 4;
+        document.getElementById('overallScore').textContent = '6.8';
+        document.getElementById('overallLabel').textContent = 'mid';
+        document.getElementById('recommendation').textContent = 'watch';
+        log('分析完成：已产出 report 与关键问题/证据。');
+        renderStages();
+      });
+
+      document.getElementById('submitReviewBtn').addEventListener('click', () => {
+        if (!state.analysisDone) {
+          log('复核被拦截：请先完成分析。');
+          return;
+        }
+        state.reviewDone = true;
+        log('已提交复核：生成 human_revised 快照。');
+        renderStages();
+      });
+
+      document.getElementById('overrideScore').addEventListener('input', (e) => {
+        document.getElementById('scoreText').textContent = e.target.value;
+      });
+
+      document.getElementById('newTaskBtn').addEventListener('click', () => {
+        const button = document.getElementById('newTaskBtn');
+        button.classList.toggle('is-active');
+        log('已触发：新建分析任务入口。');
+      });
+
+      document.getElementById('runNextBtn').addEventListener('click', () => {
+        if (!state.sourcesSynced) {
+          state.sourcesSynced = true;
+          state.step = 3;
+          log('运行下一步：完成来源同步。');
+          renderStages();
+          return;
+        }
+        if (!state.hasFreshData) {
+          simulateCollect(['website', 'docs', 'whitepaper']);
+          state.step = 4;
+          log('运行下一步：触发基础采集。');
+          renderStages();
+          return;
+        }
+        if (!state.analysisDone) {
+          state.analysisDone = true;
+          log('运行下一步：完成分析。');
+          renderStages();
+          return;
+        }
+        if (!state.reviewDone) {
+          state.reviewDone = true;
+          log('运行下一步：完成复核。');
+          renderStages();
+          return;
+        }
+        log('运行下一步：流程已完成，维持最终状态。');
+      });
+
+      renderStages();
+      renderRuns();
+    </script>
+  </body>
+</html>

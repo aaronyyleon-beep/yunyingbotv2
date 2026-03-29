@@ -3,11 +3,12 @@ import path from "node:path";
 import type { PublicCollectionResult } from "@yunyingbot/shared";
 import type { AppDbClient } from "../db/client.js";
 import { loadRepoEnv } from "../config/load-env.js";
-import { insertEvidenceRecord, updateTaskStatuses } from "../repositories/core-task-chain-repository.js";
+import { insertEvidenceRecord } from "../repositories/core-task-chain-repository.js";
 import { resolveBrowserExecutablePath } from "./browser-runtime.js";
 import { resolveTwitterBrowserUserDataDir } from "./twitter-browser-profile.js";
 import { recordCollectionRunPg } from "./record-collection-run-pg.js";
 import { resolveTwitterStorageStatePath } from "./twitter-storage-state.js";
+import { applyCollectionHardGate } from "./fresh-evidence-gate.js";
 import { chromium } from "playwright-core";
 
 const TWITTER_BROWSER_USER_AGENT =
@@ -310,6 +311,12 @@ export const collectTwitterBrowserPg = async (db: AppDbClient, repoRoot: string,
 
   if (!browserExecutablePath) {
     warnings.push("No supported browser executable is available for Twitter browser collection.");
+    await applyCollectionHardGate(db, {
+      taskId,
+      sourceTypes: ["twitter"],
+      status: "failed",
+      evidenceCount: 0
+    });
     await recordCollectionRunPg(db, {
       taskId,
       collectorKey: "twitter_browser_fetch",
@@ -374,11 +381,14 @@ export const collectTwitterBrowserPg = async (db: AppDbClient, repoRoot: string,
     }
   }
 
-  if (evidenceCount > 0) {
-    await updateTaskStatuses(db, { taskId, collectionStatus: "evidence_ready" });
-  }
   const runStatus: "completed" | "partial" | "failed" =
     collectedSources.length === 0 ? "failed" : skippedSources.length > 0 || sawPartial || warnings.length > 0 ? "partial" : "completed";
+  await applyCollectionHardGate(db, {
+    taskId,
+    sourceTypes: ["twitter"],
+    status: runStatus,
+    evidenceCount
+  });
   await recordCollectionRunPg(db, { taskId, collectorKey: "twitter_browser_fetch", sourceType: "twitter", status: runStatus, collectedCount: collectedSources.length, skippedCount: skippedSources.length, evidenceCount, warnings });
   return { taskId, collectedSources, skippedSources, warnings, evidenceCount };
 };

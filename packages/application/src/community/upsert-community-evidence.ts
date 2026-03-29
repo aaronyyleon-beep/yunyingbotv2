@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { AppDbClient } from "../db/client.js";
 import { recordCollectionRunPg } from "../collection/record-collection-run-pg.js";
+import { applyCollectionHardGate } from "../collection/fresh-evidence-gate.js";
 
 const nowIso = () => new Date().toISOString();
 
@@ -127,7 +128,12 @@ export const upsertCommunityEvidence = async (db: AppDbClient, input: UpsertComm
   }
 
   await db.execute(`UPDATE sources SET access_status = $1, updated_at = $2 WHERE id = $3`, [evidenceCount > 0 ? "partial" : "pending", now, input.sourceId]);
-  await db.execute(`UPDATE analysis_tasks SET collection_status = $1, updated_at = $2 WHERE id = $3`, [evidenceCount > 0 ? "evidence_ready" : "collecting", now, input.taskId]);
+  await applyCollectionHardGate(db, {
+    taskId: input.taskId,
+    sourceTypes: [input.sourceType],
+    status: evidenceCount > 0 ? "partial" : "failed",
+    evidenceCount
+  });
 
   await recordCollectionRunPg(db, {
     taskId: input.taskId,

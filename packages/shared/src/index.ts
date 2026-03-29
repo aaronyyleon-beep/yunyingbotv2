@@ -30,7 +30,7 @@ export interface OfflineAnalysisResult {
   nextBuildTargets: string[];
 }
 
-export type TaskInputType = "url" | "text" | "document";
+export type TaskInputType = "url" | "text" | "document" | "contract";
 
 export interface TaskInputPayload {
   type: TaskInputType;

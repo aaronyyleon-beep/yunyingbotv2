@@ -12,6 +12,7 @@ export interface TaskSummaryRow {
   task_status: string;
   collection_status: string;
   analysis_status: string;
+  fresh_evidence_ready: boolean;
   project_name: string;
   final_score: number | null;
   review_status: string;
@@ -33,6 +34,8 @@ export interface TaskSourceRow extends DbRowLike {
   chain_key: string | null;
   chain_label: string | null;
   contract_role_hint: string | null;
+  last_collected_at: string | null;
+  last_evidence_count: number;
   created_at: string;
   updated_at: string;
   evidence_count: number;
@@ -55,6 +58,7 @@ export interface TaskSnapshotRow extends DbRowLike {
   task_status: string;
   collection_status: string;
   analysis_status: string;
+  fresh_evidence_ready: boolean;
   review_status: string;
   final_status: string;
   created_at: string;
@@ -238,6 +242,7 @@ export const listTaskSummaries = async (db: AppDbClient): Promise<TaskSummaryRow
        t.task_status,
        t.collection_status,
        t.analysis_status,
+       t.fresh_evidence_ready,
        p.name AS project_name,
        r.final_score,
        t.review_status,
@@ -371,6 +376,7 @@ export const getTaskSnapshotCore = async (db: AppDbClient, taskId: string) => {
        t.task_status,
        t.collection_status,
        t.analysis_status,
+       t.fresh_evidence_ready,
        t.review_status,
        t.final_status,
        t.created_at,
@@ -406,6 +412,7 @@ export const getTaskSnapshotCore = async (db: AppDbClient, taskId: string) => {
       task_status: snapshot.task_status,
       collection_status: snapshot.collection_status,
       analysis_status: snapshot.analysis_status,
+      fresh_evidence_ready: snapshot.fresh_evidence_ready,
       review_status: snapshot.review_status,
       final_status: snapshot.final_status,
       created_at: snapshot.created_at,
@@ -454,6 +461,8 @@ export const listTaskSourcesByTaskId = async (db: AppDbClient, taskId: string): 
        o.chain_key,
        o.chain_label,
        o.contract_role_hint,
+       s.last_collected_at,
+       s.last_evidence_count,
        s.created_at,
        s.updated_at,
        COUNT(e.id)::int AS evidence_count
