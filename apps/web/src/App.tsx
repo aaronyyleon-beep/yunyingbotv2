@@ -886,6 +886,16 @@ export default function App() {
           </div>
         </div>
         <div className="panel-body">
+          {isIntakeDraftOpen ? (
+            <button
+              type="button"
+              className={`task-item-card is-active`}
+              onClick={handleStartNewTaskDraft}
+            >
+              <strong>Analysis_Task_Draft</strong>
+              <span>未创建 · 草稿中</span>
+            </button>
+          ) : null}
           {(historyLoaded ? tasks : selectedTask ? [selectedTask] : []).map((task) => (
             <button
               key={task.id}
