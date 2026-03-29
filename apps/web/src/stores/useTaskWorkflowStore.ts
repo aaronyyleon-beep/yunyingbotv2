@@ -17,10 +17,10 @@ export function useTaskWorkflowStore(inputs: WorkflowInputs) {
   return useMemo(() => {
     const hasTask = Boolean(inputs.selectedTaskId);
     const hasFreshCollection = Boolean(inputs.selectedTaskId && inputs.freshlyCollectedTaskIds.has(inputs.selectedTaskId));
-    const hasRunningCollectionRun = inputs.runs.some((run) => ["queued", "running"].includes(run.status));
+    const hasRunningCollectionRun = hasTask && inputs.runs.some((run) => ["queued", "running"].includes(run.status));
     const isTwitterQueued = Boolean(inputs.selectedTaskId && inputs.twitterQueueAtByTask[inputs.selectedTaskId]);
     const collectionInProgress =
-      (inputs.activeActionPath !== null && inputs.activeActionPath !== "analyze-factors") || hasRunningCollectionRun || isTwitterQueued;
+      hasTask && ((inputs.activeActionPath !== null && inputs.activeActionPath !== "analyze-factors") || hasRunningCollectionRun || isTwitterQueued);
     const collectionBlockedBySourceSync = hasTask && inputs.sourceConfigDirty;
     const canRunAnalysis = hasTask && hasFreshCollection && !collectionInProgress && !collectionBlockedBySourceSync;
     const hasAnalysisResult = Boolean(inputs.finalReport || inputs.report?.report || (inputs.snapshot?.factors.length ?? 0) > 0);
