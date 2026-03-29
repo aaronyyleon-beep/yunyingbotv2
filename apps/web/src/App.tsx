@@ -898,6 +898,37 @@ export default function App() {
     ];
   }, [runs]);
 
+  const getSourceTargetValue = (source: Step3CollectSourceKey): string => {
+    if (source === "website/docs") return websiteInput;
+    if (source === "twitter") return twitterInput;
+    if (source === "telegram") return telegramInput;
+    if (source === "discord") return discordInput;
+    if (source === "chain") return chainInput;
+    return "";
+  };
+
+  const setSourceTargetValue = (source: Step3CollectSourceKey, value: string) => {
+    if (source === "website/docs") {
+      setWebsiteInput(value);
+      return;
+    }
+    if (source === "twitter") {
+      setTwitterInput(value);
+      return;
+    }
+    if (source === "telegram") {
+      setTelegramInput(value);
+      return;
+    }
+    if (source === "discord") {
+      setDiscordInput(value);
+      return;
+    }
+    if (source === "chain") {
+      setChainInput(value as ChainValue);
+    }
+  };
+
   return (
     <main className="prototype-layout">
       <aside className="panel-col left-col">
@@ -1002,9 +1033,9 @@ export default function App() {
             </div>
           </section>
 
-          {currentStep <= 2 ? (
+          {currentStep === 1 ? (
             <section className="content-card">
-              <p className="section-label">{currentStep === 1 ? "Step 1 · 任务信息与来源输入" : "Step 2 · 数据采集（来源可编辑）"}</p>
+              <p className="section-label">Step 1 · 任务信息与来源输入</p>
               <div className="source-grid">
                 <label><span>website</span><input value={websiteInput} onChange={(event) => setWebsiteInput(event.target.value)} disabled={sourceInputsDisabled} /></label>
                 <label><span>docs</span><input value={docsInput} onChange={(event) => setDocsInput(event.target.value)} disabled={sourceInputsDisabled} /></label>
@@ -1020,15 +1051,63 @@ export default function App() {
                   {isSyncingSources ? "同步中..." : "同步来源到任务"}
                 </button>
               </div>
-              {currentStep === 2 ? (
+            </section>
+          ) : null}
+
+          {currentStep === 2 ? (
+            <section className="content-card">
+              <p className="section-label">Step 2 · 数据采集</p>
               <table className="run-table">
                 <thead>
-                  <tr><th>source</th><th>是否采集</th><th>status</th><th>createdAt</th><th>evidence</th></tr>
+                  <tr><th>source</th><th>目标链接/链</th><th>是否采集</th><th>status</th><th>createdAt</th><th>evidence</th></tr>
                 </thead>
                 <tbody>
                   {sourceRunRows.map((row) => (
                     <tr key={row.source}>
                       <td>{row.source}</td>
+                      <td>
+                        {row.source === "whitepaper" ? (
+                          <span className="muted">PDF 文件（Step 1 上传）</span>
+                        ) : row.source === "website/docs" ? (
+                          <div className="source-grid">
+                            <label>
+                              <span>website</span>
+                              <input
+                                value={websiteInput}
+                                onChange={(event) => setWebsiteInput(event.target.value)}
+                                disabled={sourceInputsDisabled}
+                                placeholder="website URL"
+                              />
+                            </label>
+                            <label>
+                              <span>docs</span>
+                              <input
+                                value={docsInput}
+                                onChange={(event) => setDocsInput(event.target.value)}
+                                disabled={sourceInputsDisabled}
+                                placeholder="docs/whitepaper URL"
+                              />
+                            </label>
+                          </div>
+                        ) : row.source === "chain" ? (
+                          <select
+                            value={chainInput}
+                            onChange={(event) => setSourceTargetValue(row.source, event.target.value)}
+                            disabled={sourceInputsDisabled}
+                          >
+                            {CHAIN_OPTIONS.map((chain) => (
+                              <option key={chain.value} value={chain.value}>{chain.label}</option>
+                            ))}
+                          </select>
+                        ) : (
+                          <input
+                            value={getSourceTargetValue(row.source)}
+                            onChange={(event) => setSourceTargetValue(row.source, event.target.value)}
+                            disabled={sourceInputsDisabled}
+                            placeholder="填写该来源链接"
+                          />
+                        )}
+                      </td>
                       <td>
                         <button
                           type="button"
@@ -1051,7 +1130,6 @@ export default function App() {
                   ))}
                 </tbody>
               </table>
-              ) : null}
             </section>
           ) : null}
 
