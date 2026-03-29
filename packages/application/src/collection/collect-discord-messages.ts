@@ -20,6 +20,11 @@ type DiscordChannel = {
   position?: number;
 };
 
+type DiscordGuild = {
+  id: string;
+  name?: string;
+};
+
 type DiscordMessage = {
   id: string;
   content?: string;
@@ -105,13 +110,35 @@ const sampleUnique = <T>(items: T[], limit: number, keyFn: (item: T) => string):
   return result;
 };
 
-const extractDiscordInviteCode = (sourceUrl: string, fallbackLabel?: string | null): string | null => {
-  if (fallbackLabel) return fallbackLabel;
+type DiscordSourceTarget =
+  | { kind: "invite"; value: string }
+  | { kind: "guild"; value: string };
+
+const isLikelyGuildId = (value: string): boolean => /^\d{12,}$/.test(value.trim());
+
+const resolveDiscordSourceTarget = (sourceUrl: string, fallbackLabel?: string | null): DiscordSourceTarget | null => {
+  if (fallbackLabel?.trim()) {
+    const normalized = fallbackLabel.trim();
+    if (isLikelyGuildId(normalized)) {
+      return { kind: "guild", value: normalized };
+    }
+    return { kind: "invite", value: normalized };
+  }
 
   try {
     const url = new URL(sourceUrl);
     const parts = url.pathname.split("/").filter(Boolean);
-    return parts.at(-1) ?? null;
+
+    if (parts[0] === "channels" && parts[1] && isLikelyGuildId(parts[1])) {
+      return { kind: "guild", value: parts[1] };
+    }
+
+    const tail = parts.at(-1);
+    if (!tail) return null;
+    if (isLikelyGuildId(tail)) {
+      return { kind: "guild", value: tail };
+    }
+    return { kind: "invite", value: tail };
   } catch {
     return null;
   }
@@ -286,28 +313,43 @@ export const collectDiscordMessages = async (
   }
 
   for (const source of sources) {
-    const inviteCode = extractDiscordInviteCode(source.source_url, source.target_label);
-    if (!inviteCode) {
-      warnings.push(`Could not infer Discord invite code from ${source.source_url}`);
+    const target = resolveDiscordSourceTarget(source.source_url, source.target_label);
+    if (!target) {
+      warnings.push(`Could not infer Discord source target from ${source.source_url}`);
       skippedSources.push(source.source_url);
       continue;
     }
 
-    let invite: DiscordInviteResponse;
-    try {
-      invite = await requestDiscord<DiscordInviteResponse>(token, `/invites/${encodeURIComponent(inviteCode)}?with_counts=true`);
-    } catch (error) {
-      warnings.push(error instanceof Error ? error.message : `Discord invite fetch failed for ${inviteCode}.`);
-      skippedSources.push(source.source_url);
-      continue;
-    }
+    let guildId: string | null = null;
+    let guildName = target.value;
 
-    const guildId = invite.guild?.id;
-    const guildName = invite.guild?.name ?? inviteCode;
-    if (!guildId) {
-      warnings.push(`Discord invite ${inviteCode} did not resolve to a guild.`);
-      skippedSources.push(source.source_url);
-      continue;
+    if (target.kind === "invite") {
+      let invite: DiscordInviteResponse;
+      try {
+        invite = await requestDiscord<DiscordInviteResponse>(token, `/invites/${encodeURIComponent(target.value)}?with_counts=true`);
+      } catch (error) {
+        warnings.push(error instanceof Error ? error.message : `Discord invite fetch failed for ${target.value}.`);
+        skippedSources.push(source.source_url);
+        continue;
+      }
+
+      guildId = invite.guild?.id ?? null;
+      guildName = invite.guild?.name ?? target.value;
+      if (!guildId) {
+        warnings.push(`Discord invite ${target.value} did not resolve to a guild.`);
+        skippedSources.push(source.source_url);
+        continue;
+      }
+    } else {
+      guildId = target.value;
+      try {
+        const guild = await requestDiscord<DiscordGuild>(token, `/guilds/${encodeURIComponent(guildId)}`);
+        guildName = guild.name ?? guildId;
+      } catch (error) {
+        warnings.push(error instanceof Error ? error.message : `Discord guild fetch failed for ${guildId}.`);
+        skippedSources.push(source.source_url);
+        continue;
+      }
     }
 
     let channels: DiscordChannel[];
