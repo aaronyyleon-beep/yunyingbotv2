@@ -166,6 +166,17 @@ const reviewStatusLabel = (reviewStatus?: string | null) => {
   return labels[reviewStatus ?? ""] ?? reviewStatus ?? "未知";
 };
 
+const STEP3_COLLECT_SOURCE_KEYS = ["website/docs", "whitepaper", "twitter", "telegram", "discord", "chain"] as const;
+type Step3CollectSourceKey = (typeof STEP3_COLLECT_SOURCE_KEYS)[number];
+const DEFAULT_COLLECT_ENABLED_BY_SOURCE: Record<Step3CollectSourceKey, boolean> = {
+  "website/docs": true,
+  whitepaper: true,
+  twitter: true,
+  telegram: true,
+  discord: true,
+  chain: true
+};
+
 const botAccessStatusLabel = (status?: string | null) => {
   const labels: Record<string, string> = {
     pending_bot_access: "待接入机器人",
@@ -413,6 +424,9 @@ export default function App() {
   const [level1Expanded, setLevel1Expanded] = useState(true);
   const [expandedDimensions, setExpandedDimensions] = useState<Set<string>>(new Set(TASK_HIERARCHY.level2.map((item) => item.name)));
   const [isIntakeDraftOpen, setIsIntakeDraftOpen] = useState(false);
+  const [collectEnabledBySource, setCollectEnabledBySource] = useState<Record<Step3CollectSourceKey, boolean>>(
+    DEFAULT_COLLECT_ENABLED_BY_SOURCE
+  );
   const selectedTask = tasks.find((task) => task.id === selectedTaskId) ?? null;
 
   const sourceDraftFromInputs = useMemo<SourceConfigDraft>(
@@ -775,7 +789,16 @@ export default function App() {
       return;
     }
     if (!hasFreshCollection) {
-      void runAction("正在采集公开页面...", "collect-public");
+      const enabledRows = sourceRunRows.filter((row) => collectEnabledBySource[row.source]);
+      if (enabledRows.length === 0) {
+        setActionState("请先在 Step 3 开启至少一个来源采集（是否采集=是）。");
+        return;
+      }
+      void (async () => {
+        for (const row of enabledRows) {
+          await runAction(row.actionLabel, row.actionPath);
+        }
+      })();
       return;
     }
     if (!hasAnalysisResult) {
@@ -808,6 +831,7 @@ export default function App() {
   useEffect(() => {
     if (!selectedTaskId) return;
     setIsIntakeDraftOpen(false);
+    setCollectEnabledBySource(DEFAULT_COLLECT_ENABLED_BY_SOURCE);
   }, [selectedTaskId]);
 
   useEffect(() => {
@@ -830,12 +854,48 @@ export default function App() {
       });
 
     return [
-      { source: "website/docs", collector: "public_web_fetch", run: byCollector.get("public_web_fetch") ?? null },
-      { source: "whitepaper", collector: "whitepaper_pdf_parse", run: byCollector.get("whitepaper_pdf_parse") ?? null },
-      { source: "twitter", collector: "twitter_browser_fetch", run: byCollector.get("twitter_browser_fetch") ?? null },
-      { source: "telegram", collector: "telegram_bot_ingestion", run: byCollector.get("telegram_bot_ingestion") ?? null },
-      { source: "discord", collector: "discord_bot_ingestion", run: byCollector.get("discord_bot_ingestion") ?? null },
-      { source: "chain", collector: "onchain_rpc_provider", run: byCollector.get("onchain_rpc_provider") ?? null }
+      {
+        source: "website/docs" as Step3CollectSourceKey,
+        collector: "public_web_fetch",
+        actionPath: "collect-public",
+        actionLabel: "正在采集公开页面...",
+        run: byCollector.get("public_web_fetch") ?? null
+      },
+      {
+        source: "whitepaper" as Step3CollectSourceKey,
+        collector: "whitepaper_pdf_parse",
+        actionPath: "collect-whitepaper-pdf",
+        actionLabel: "正在解析 Whitepaper PDF...",
+        run: byCollector.get("whitepaper_pdf_parse") ?? null
+      },
+      {
+        source: "twitter" as Step3CollectSourceKey,
+        collector: "twitter_browser_fetch",
+        actionPath: "collect-twitter-browser",
+        actionLabel: "正在通过浏览器采集 Twitter 页面...",
+        run: byCollector.get("twitter_browser_fetch") ?? null
+      },
+      {
+        source: "telegram" as Step3CollectSourceKey,
+        collector: "telegram_bot_ingestion",
+        actionPath: "collect-telegram",
+        actionLabel: "正在采集 Telegram 社区...",
+        run: byCollector.get("telegram_bot_ingestion") ?? null
+      },
+      {
+        source: "discord" as Step3CollectSourceKey,
+        collector: "discord_bot_ingestion",
+        actionPath: "collect-discord",
+        actionLabel: "正在采集 Discord 社区...",
+        run: byCollector.get("discord_bot_ingestion") ?? null
+      },
+      {
+        source: "chain" as Step3CollectSourceKey,
+        collector: "onchain_rpc_provider",
+        actionPath: "collect-onchain",
+        actionLabel: "正在采集链上指标...",
+        run: byCollector.get("onchain_rpc_provider") ?? null
+      }
     ];
   }, [runs]);
 
@@ -971,7 +1031,21 @@ export default function App() {
                   {sourceRunRows.map((row) => (
                     <tr key={row.source}>
                       <td>{row.source}</td>
-                      <td>是</td>
+                      <td>
+                        <button
+                          type="button"
+                          className="workflow-btn"
+                          onClick={() =>
+                            setCollectEnabledBySource((current) => ({
+                              ...current,
+                              [row.source]: !current[row.source]
+                            }))
+                          }
+                          disabled={!hasTask || collectionInProgress}
+                        >
+                          {collectEnabledBySource[row.source] ? "是" : "否"}
+                        </button>
+                      </td>
                       <td>{row.run ? sourceStatusLabel(row.run.status) : "未采集"}</td>
                       <td>{row.run ? new Date(row.run.created_at).toLocaleString("zh-CN") : "--"}</td>
                       <td>{row.run?.evidence_count ?? "--"}</td>
