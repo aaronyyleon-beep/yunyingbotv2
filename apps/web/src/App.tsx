@@ -412,6 +412,7 @@ export default function App() {
   const [selectedDimensionName, setSelectedDimensionName] = useState<string>(TASK_HIERARCHY.level2[0]?.name ?? "");
   const [level1Expanded, setLevel1Expanded] = useState(true);
   const [expandedDimensions, setExpandedDimensions] = useState<Set<string>>(new Set(TASK_HIERARCHY.level2.map((item) => item.name)));
+  const [isIntakeDraftOpen, setIsIntakeDraftOpen] = useState(false);
   const selectedTask = tasks.find((task) => task.id === selectedTaskId) ?? null;
 
   const sourceDraftFromInputs = useMemo<SourceConfigDraft>(
@@ -758,6 +759,10 @@ export default function App() {
 
   const handleRunNextStep = () => {
     if (!hasTask) {
+      if (!isIntakeDraftOpen) {
+        setActionState("请先点击“新建分析任务”，进入来源填写页面。");
+        return;
+      }
       void handleCreateTask();
       return;
     }
@@ -785,6 +790,7 @@ export default function App() {
   };
 
   const handleStartNewTaskDraft = () => {
+    setIsIntakeDraftOpen(true);
     setSelectedTaskId(null);
     setWebsiteInput("");
     setDocsInput("");
@@ -798,6 +804,11 @@ export default function App() {
     setWhitepaperInputKey((current) => current + 1);
     setActionState("已进入 Step 1 新建任务。请先填写来源，再点击“运行下一步：创建任务”。");
   };
+
+  useEffect(() => {
+    if (!selectedTaskId) return;
+    setIsIntakeDraftOpen(false);
+  }, [selectedTaskId]);
 
   useEffect(() => {
     if (!selectedTaskId) return;
@@ -882,7 +893,10 @@ export default function App() {
               key={task.id}
               type="button"
               className={`task-item-card ${selectedTaskId === task.id ? "is-active" : ""}`}
-              onClick={() => setSelectedTaskId(task.id)}
+              onClick={() => {
+                setIsIntakeDraftOpen(false);
+                setSelectedTaskId(task.id);
+              }}
             >
               <strong>{task.project_name}</strong>
               <span>{task.id.slice(0, 8)} · {task.risk_level ?? "未知"}</span>
@@ -905,6 +919,22 @@ export default function App() {
           <p className="panel-sub">单主按钮流程：同步来源 / 采集 / 分析 / 复核</p>
         </div>
         <div className="panel-body">
+          {!selectedTaskId && !isIntakeDraftOpen ? (
+            <section className="content-card">
+              <p className="section-label">创建入口</p>
+              <p className="muted">中间区当前为空。点击左侧“新建分析任务”后，在这里填写数据来源并创建任务。</p>
+              <div className="action-row">
+                <CreateTaskButton
+                  onClick={handleStartNewTaskDraft}
+                  disabled={isCreatingTask}
+                  loading={isCreatingTask}
+                  label="新建分析任务"
+                  loadingLabel="准备中..."
+                />
+              </div>
+            </section>
+          ) : (
+            <>
           <section className="stage-box">
             <div className="stage-row">
               <span>Step {currentStep}/4</span>
@@ -1008,6 +1038,8 @@ export default function App() {
               </div>
             </section>
           ) : null}
+            </>
+          )}
         </div>
       </section>
 
