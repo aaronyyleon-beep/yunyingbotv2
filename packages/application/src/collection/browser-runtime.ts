@@ -35,9 +35,13 @@ const findPlaywrightChromiumPath = (): string | null => {
     try {
       const dirs = readdirSync(root, { withFileTypes: true }).filter((entry) => entry.isDirectory());
       for (const dir of dirs) {
-        const candidate = path.join(root, dir.name, "chrome-linux", "chrome");
-        if (existsSync(candidate)) {
-          return candidate;
+        const candidates = [
+          path.join(root, dir.name, "chrome-linux", "chrome"),
+          path.join(root, dir.name, "chrome-linux64", "chrome")
+        ];
+        const detected = candidates.find((candidate) => existsSync(candidate));
+        if (detected) {
+          return detected;
         }
       }
     } catch {
