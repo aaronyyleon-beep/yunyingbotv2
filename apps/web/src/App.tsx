@@ -735,37 +735,35 @@ export default function App() {
                 }
               : null;
 
-  const currentStep: 1 | 2 | 3 | 4 = !hasTask
+  const currentStep: 1 | 2 | 3 = !hasTask
     ? 1
-    : sourceConfigDirty
+    : sourceConfigDirty || collectionInProgress || !hasFreshCollection
       ? 2
-      : collectionInProgress || !hasFreshCollection
-        ? 3
-        : 4;
+      : 3;
 
   const currentStepHint = !hasTask
     ? "Step 1：请先创建任务。"
     : sourceConfigDirty
       ? "Step 2：你修改了来源但还未同步。"
       : collectionInProgress
-        ? "Step 3：采集进行中，请等待完成。"
+        ? "Step 2：采集进行中，请等待完成。"
         : !hasFreshCollection
-          ? "Step 3：尚未完成当前任务采集。"
+          ? "Step 2：尚未完成当前任务采集。"
           : !hasAnalysisResult
-            ? "Step 4：尚未运行分析。"
+            ? "Step 3：尚未运行分析。"
             : canReview && selectedFactorId
-              ? "Step 4：可提交当前三级因子复核。"
-              : "Step 4：分析流程已完成，可按需复核。";
+              ? "Step 3：可提交当前三级因子复核。"
+              : "Step 3：分析流程已完成，可按需复核。";
   const sourceInputsDisabled = collectionInProgress;
 
   const nextStepLabel = !hasTask
     ? "创建任务"
     : sourceConfigDirty
-      ? "同步来源"
+      ? "去同步"
       : collectionInProgress
         ? "等待采集完成"
         : !hasFreshCollection
-          ? "采集基础来源"
+          ? "采集已选来源"
           : !hasAnalysisResult
             ? "运行分析"
             : canReview && selectedFactorId
@@ -792,7 +790,7 @@ export default function App() {
     if (!hasFreshCollection) {
       const enabledRows = sourceRunRows.filter((row) => collectEnabledBySource[row.source]);
       if (enabledRows.length === 0) {
-        setActionState("请先在 Step 3 开启至少一个来源采集（是否采集=是）。");
+        setActionState("请先在 Step 2 开启至少一个来源采集（是否采集=是）。");
         return;
       }
       void (async () => {
@@ -977,15 +975,14 @@ export default function App() {
             <>
           <section className="stage-box">
             <div className="stage-row">
-              <span>Step {currentStep}/4</span>
+              <span>Step {currentStep}/3</span>
               <span>下一步：{nextStepLabel}</span>
             </div>
-            <div className="stage-track"><div className="stage-fill" style={{ width: `${Math.round((currentStep / 4) * 100)}%` }} /></div>
+            <div className="stage-track"><div className="stage-fill" style={{ width: `${Math.round((currentStep / 3) * 100)}%` }} /></div>
             <div className="step-grid">
               <div className={`step-pill ${currentStep === 1 ? "active" : currentStep > 1 ? "done" : ""}`}>Step 1 任务信息</div>
-              <div className={`step-pill ${currentStep === 2 ? "active" : currentStep > 2 ? "done" : ""}`}>Step 2 来源配置</div>
-              <div className={`step-pill ${currentStep === 3 ? "active" : currentStep > 3 ? "done" : ""}`}>Step 3 数据采集</div>
-              <div className={`step-pill ${currentStep === 4 ? "active" : ""}`}>Step 4 分析与复核</div>
+              <div className={`step-pill ${currentStep === 2 ? "active" : currentStep > 2 ? "done" : ""}`}>Step 2 数据采集</div>
+              <div className={`step-pill ${currentStep === 3 ? "active" : ""}`}>Step 3 分析与复核</div>
             </div>
             <div className="blocker-box">
               <strong>当前卡点：{currentStepHint}</strong>
@@ -1007,7 +1004,7 @@ export default function App() {
 
           {currentStep <= 2 ? (
             <section className="content-card">
-              <p className="section-label">{currentStep === 1 ? "Step 1 · 任务信息与来源输入" : "Step 2 · 来源配置同步"}</p>
+              <p className="section-label">{currentStep === 1 ? "Step 1 · 任务信息与来源输入" : "Step 2 · 数据采集（来源可编辑）"}</p>
               <div className="source-grid">
                 <label><span>website</span><input value={websiteInput} onChange={(event) => setWebsiteInput(event.target.value)} disabled={sourceInputsDisabled} /></label>
                 <label><span>docs</span><input value={docsInput} onChange={(event) => setDocsInput(event.target.value)} disabled={sourceInputsDisabled} /></label>
@@ -1023,12 +1020,7 @@ export default function App() {
                   {isSyncingSources ? "同步中..." : "同步来源到任务"}
                 </button>
               </div>
-            </section>
-          ) : null}
-
-          {currentStep === 3 ? (
-            <section className="content-card">
-              <p className="section-label">Step 3 · 数据采集</p>
+              {currentStep === 2 ? (
               <table className="run-table">
                 <thead>
                   <tr><th>source</th><th>是否采集</th><th>status</th><th>createdAt</th><th>evidence</th></tr>
@@ -1059,12 +1051,13 @@ export default function App() {
                   ))}
                 </tbody>
               </table>
+              ) : null}
             </section>
           ) : null}
 
-          {currentStep === 4 ? (
+          {currentStep === 3 ? (
             <section className="content-card">
-              <p className="section-label">Step 4 · 分析与复核</p>
+              <p className="section-label">Step 3 · 分析与复核</p>
               <div className="action-row">
                 <button type="button" className="workflow-btn" onClick={() => void runAction("正在运行分析...", "analyze-factors")} disabled={!canRunAnalysis}>
                   运行因子分析
@@ -1082,7 +1075,7 @@ export default function App() {
         </div>
       </section>
 
-      {currentStep === 4 ? (
+      {currentStep === 3 ? (
       <aside className="panel-col right-col">
         <div className="panel-head">
           <p className="panel-title">人工复核</p>
