@@ -819,8 +819,6 @@ export default function App() {
     return () => window.clearInterval(timer);
   }, [selectedTaskId, isTwitterQueued, latestTwitterBrowserRun?.status]);
 
-  const [centerTab, setCenterTab] = useState<"sources" | "collection" | "analysis">("sources");
-
   const sourceRunRows = useMemo(() => {
     const byCollector = new Map<string, CollectionRun>();
     [...runs]
@@ -970,15 +968,9 @@ export default function App() {
             </div>
           </section>
 
-          <div className="tab-row">
-            <button type="button" className={`tab-btn ${centerTab === "sources" ? "is-active" : ""}`} onClick={() => setCenterTab("sources")}>来源配置</button>
-            <button type="button" className={`tab-btn ${centerTab === "collection" ? "is-active" : ""}`} onClick={() => setCenterTab("collection")}>采集控制</button>
-            <button type="button" className={`tab-btn ${centerTab === "analysis" ? "is-active" : ""}`} onClick={() => setCenterTab("analysis")}>分析报告</button>
-          </div>
-
-          {centerTab === "sources" ? (
+          {currentStep <= 2 ? (
             <section className="content-card">
-              <p className="section-label">TaskSources</p>
+              <p className="section-label">{currentStep === 1 ? "Step 1 · 任务信息与来源输入" : "Step 2 · 来源配置同步"}</p>
               <div className="source-grid">
                 <label><span>website</span><input value={websiteInput} onChange={(event) => setWebsiteInput(event.target.value)} /></label>
                 <label><span>docs</span><input value={docsInput} onChange={(event) => setDocsInput(event.target.value)} /></label>
@@ -997,9 +989,9 @@ export default function App() {
             </section>
           ) : null}
 
-          {centerTab === "collection" ? (
+          {currentStep === 3 ? (
             <section className="content-card">
-              <p className="section-label">CollectionRun</p>
+              <p className="section-label">Step 3 · 数据采集</p>
               <div className="action-row">
                 <button type="button" className="workflow-btn" onClick={() => void runCollectAll()} disabled={!hasTask || collectionInProgress || sourceConfigDirty}>
                   一键全量采集
@@ -1023,9 +1015,9 @@ export default function App() {
             </section>
           ) : null}
 
-          {centerTab === "analysis" ? (
+          {currentStep === 4 ? (
             <section className="content-card">
-              <p className="section-label">AnalysisReport</p>
+              <p className="section-label">Step 4 · 分析与复核</p>
               <div className="action-row">
                 <button type="button" className="workflow-btn" onClick={() => void runAction("正在运行分析...", "analyze-factors")} disabled={!canRunAnalysis}>
                   运行因子分析
