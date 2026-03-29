@@ -58,62 +58,29 @@ const inferSource = (value: string): SourceCandidate => {
   return { sourceType: "website", sourceUrl: trimmed, isOfficial: true };
 };
 
-const extractTwitterHandle = (value: string): string | null => {
-  const hostname = extractHostname(value);
-  if (!hostname || (!hostname.includes("twitter.com") && !hostname.includes("x.com"))) {
-    return null;
-  }
-
-  try {
-    const url = new URL(value);
-    const parts = url.pathname.split("/").filter(Boolean);
-    return parts[0] ?? null;
-  } catch {
-    return null;
-  }
+const formatTaskDateToken = (date: Date) => {
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
+  const yy = String(date.getFullYear() % 100).padStart(2, "0");
+  return `${mm}${dd}${yy}`;
 };
 
-const inferProjectName = (inputs: TaskInputPayload[], candidates: SourceCandidate[]): string => {
-  const websiteCandidate = candidates.find((candidate) => candidate.sourceType === "website");
-  if (websiteCandidate) {
-    const hostname = extractHostname(websiteCandidate.sourceUrl);
-    if (hostname) {
-      return hostname.replace(/^www\./, "").split(".")[0];
-    }
-  }
+const buildSequentialTaskName = async (db: AppDbClient) => {
+  const dateToken = formatTaskDateToken(new Date());
+  const prefix = `${TASK_NAME_PREFIX}${dateToken}`;
+  const rows = await db.query<{ name: string }>(
+    `SELECT name FROM projects WHERE name LIKE $1`,
+    [`${prefix}%`]
+  );
+  const nextSeq =
+    rows
+      .map((row) => row.name.trim())
+      .filter((name) => name.startsWith(prefix))
+      .map((name) => Number(name.slice(prefix.length)))
+      .filter((value) => Number.isInteger(value) && value > 0)
+      .reduce((max, current) => Math.max(max, current), 0) + 1;
 
-  const twitterCandidate = candidates.find((candidate) => candidate.sourceType === "twitter");
-  if (twitterCandidate) {
-    return extractTwitterHandle(twitterCandidate.sourceUrl) ?? "unknown-project";
-  }
-
-  const meaningfulText = inputs
-    .filter((input) => input.type === "text")
-    .map((input) => input.value.trim())
-    .find((value) => value.length > 0 && !/^chain:/i.test(value));
-  if (meaningfulText) {
-    return meaningfulText.slice(0, 32).trim() || "unknown-project";
-  }
-
-  const contractCandidate = candidates.find((candidate) => candidate.sourceType === "contract");
-  if (contractCandidate) {
-    return `${contractCandidate.sourceUrl.slice(0, 8)}...`;
-  }
-
-  return "unknown-project";
-};
-
-const normalizeTaskNameToken = (value: string): string => {
-  const normalized = value
-    .trim()
-    .replace(/\s+/g, "_")
-    .replace(/[^a-zA-Z0-9_-]/g, "_")
-    .replace(/_+/g, "_")
-    .replace(/^_+|_+$/g, "");
-  if (normalized.length > 0) {
-    return normalized.slice(0, 32);
-  }
-  return Date.now().toString();
+  return `${prefix}${String(nextSeq).padStart(2, "0")}`;
 };
 
 const extractRequestedChain = (inputs: TaskInputPayload[]): string | null => {
@@ -190,8 +157,7 @@ export const createAnalysisTaskPg = async (
   const sourceCandidates = inputs
     .filter((input) => input.type === "url" || input.type === "contract")
     .map((input) => inferSource(input.value));
-  const inferredProjectName = inferProjectName(inputs, sourceCandidates).trim();
-  const taskProjectName = `${TASK_NAME_PREFIX}${normalizeTaskNameToken(inferredProjectName)}`;
+  const taskProjectName = await buildSequentialTaskName(db);
   const normalizedName = taskProjectName.toLowerCase();
   const uncertainties: string[] = [];
 
