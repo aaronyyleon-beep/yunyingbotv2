@@ -1180,6 +1180,43 @@ button {
   color: var(--muted);
 }
 
+.step2-inline-input,
+.step2-inline-select {
+  width: 100%;
+  border: 0.6px solid rgba(120, 160, 255, 0.25);
+  border-radius: 10px;
+  background: rgba(10, 16, 32, 0.9);
+  color: #dfe8ff;
+  padding: 8px 10px;
+  font: inherit;
+  font-size: 12px;
+  appearance: none;
+  -webkit-appearance: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+.step2-inline-select {
+  padding-right: 28px;
+}
+
+.step2-inline-input::placeholder {
+  color: rgba(223, 232, 255, 0.5);
+}
+
+.step2-inline-input:focus,
+.step2-inline-select:focus {
+  outline: none;
+  border-color: rgba(110, 160, 255, 0.62);
+  box-shadow: 0 0 0 2px rgba(110, 160, 255, 0.35);
+}
+
+.step2-inline-input:disabled,
+.step2-inline-select:disabled {
+  opacity: 0.56;
+  cursor: not-allowed;
+  background: rgba(10, 16, 32, 0.62);
+}
+
 .kpi-row {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

@@ -1073,6 +1073,7 @@ export default function App() {
                             <label>
                               <span>website</span>
                               <input
+                                className="step2-inline-input"
                                 value={websiteInput}
                                 onChange={(event) => setWebsiteInput(event.target.value)}
                                 disabled={sourceInputsDisabled}
@@ -1082,6 +1083,7 @@ export default function App() {
                             <label>
                               <span>docs</span>
                               <input
+                                className="step2-inline-input"
                                 value={docsInput}
                                 onChange={(event) => setDocsInput(event.target.value)}
                                 disabled={sourceInputsDisabled}
@@ -1091,6 +1093,7 @@ export default function App() {
                           </div>
                         ) : row.source === "chain" ? (
                           <select
+                            className="step2-inline-select"
                             value={chainInput}
                             onChange={(event) => setSourceTargetValue(row.source, event.target.value)}
                             disabled={sourceInputsDisabled}
@@ -1101,6 +1104,7 @@ export default function App() {
                           </select>
                         ) : (
                           <input
+                            className="step2-inline-input"
                             value={getSourceTargetValue(row.source)}
                             onChange={(event) => setSourceTargetValue(row.source, event.target.value)}
                             disabled={sourceInputsDisabled}
