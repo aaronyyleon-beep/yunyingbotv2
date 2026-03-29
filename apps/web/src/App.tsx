@@ -398,16 +398,16 @@ export default function App() {
   const [sourceDraftHydratedByTask, setSourceDraftHydratedByTask] = useState<Record<string, boolean>>({});
   const [isSyncingSources, setIsSyncingSources] = useState(false);
   const [activeActionPath, setActiveActionPath] = useState<string | null>(null);
-  const [websiteInput, setWebsiteInput] = useState("https://docs.python.org/3/");
-  const [docsInput, setDocsInput] = useState("https://nodejs.org/api/documentation.html");
+  const [websiteInput, setWebsiteInput] = useState("");
+  const [docsInput, setDocsInput] = useState("");
   const [whitepaperFile, setWhitepaperFile] = useState<File | null>(null);
   const [whitepaperInputKey, setWhitepaperInputKey] = useState(0);
-  const [twitterInput, setTwitterInput] = useState("https://twitter.com/OpenAI/status/1900000000000000001");
+  const [twitterInput, setTwitterInput] = useState("");
   const [telegramInput, setTelegramInput] = useState("");
   const [discordInput, setDiscordInput] = useState("");
   const [chainInput, setChainInput] = useState<ChainValue>("ethereum");
   const [contractInput, setContractInput] = useState("");
-  const [notesInput, setNotesInput] = useState("new task from web intake");
+  const [notesInput, setNotesInput] = useState("");
   const [activeHierarchyLevel, setActiveHierarchyLevel] = useState<"level2" | "level3">("level2");
   const [selectedDimensionName, setSelectedDimensionName] = useState<string>(TASK_HIERARCHY.level2[0]?.name ?? "");
   const [level1Expanded, setLevel1Expanded] = useState(true);
@@ -784,6 +784,21 @@ export default function App() {
     setActionState("当前任务流程已完成。你可以在“更多操作”里按需补采集。");
   };
 
+  const handleStartNewTaskDraft = () => {
+    setSelectedTaskId(null);
+    setWebsiteInput("");
+    setDocsInput("");
+    setTwitterInput("");
+    setTelegramInput("");
+    setDiscordInput("");
+    setChainInput("ethereum");
+    setContractInput("");
+    setNotesInput("");
+    setWhitepaperFile(null);
+    setWhitepaperInputKey((current) => current + 1);
+    setActionState("已进入 Step 1 新建任务。请先填写来源，再点击“运行下一步：创建任务”。");
+  };
+
   useEffect(() => {
     if (!selectedTaskId) return;
     if (!(isTwitterQueued || latestTwitterBrowserRun?.status === "running")) return;
@@ -852,10 +867,12 @@ export default function App() {
           <p className="panel-sub">Task List · Live Mode</p>
           <div className="panel-head-action">
             <CreateTaskButton
-              onClick={handleCreateTask}
-              disabled={isCreatingTask || collectionInProgress}
+              onClick={handleStartNewTaskDraft}
+              disabled={isCreatingTask}
               loading={isCreatingTask}
-              active={!selectedTaskId || currentStep === 1}
+              active={!selectedTaskId}
+              label="新建分析任务"
+              loadingLabel="准备中..."
             />
           </div>
         </div>

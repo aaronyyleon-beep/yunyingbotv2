@@ -209,6 +209,18 @@ export function useTaskMutations(args: UseTaskMutationsArgs) {
 
     const handleCreateTask = async () => {
       if (args.isCreatingTask) return;
+      const hasAnySourceInput =
+        Boolean(args.websiteInput.trim()) ||
+        Boolean(args.docsInput.trim()) ||
+        Boolean(args.twitterInput.trim()) ||
+        Boolean(args.telegramInput.trim()) ||
+        Boolean(args.discordInput.trim()) ||
+        normalizeContractList(args.contractInput).length > 0 ||
+        Boolean(args.whitepaperFile);
+      if (!hasAnySourceInput) {
+        args.setActionState("请先在 Step 1 填写至少一个来源（URL/合约/PDF），再创建任务。");
+        return;
+      }
       args.setIsCreatingTask(true);
       try {
         args.setActionState("正在创建分析任务...");
