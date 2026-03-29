@@ -859,15 +859,6 @@ export default function App() {
     void runAction("正在解析 Whitepaper PDF...", "collect-whitepaper-pdf");
   };
 
-  const runCollectAll = async () => {
-    await runAction("正在采集公开页面...", "collect-public");
-    runManualCollect("whitepaper");
-    runManualCollect("twitter");
-    runManualCollect("telegram");
-    runManualCollect("discord");
-    runManualCollect("chain");
-  };
-
   return (
     <main className="prototype-layout">
       <aside className="panel-col left-col">
@@ -1002,11 +993,6 @@ export default function App() {
           {currentStep === 3 ? (
             <section className="content-card">
               <p className="section-label">Step 3 · 数据采集</p>
-              <div className="action-row">
-                <button type="button" className="workflow-btn" onClick={() => void runCollectAll()} disabled={!hasTask || collectionInProgress || sourceConfigDirty}>
-                  一键全量采集
-                </button>
-              </div>
               <table className="run-table">
                 <thead>
                   <tr><th>source</th><th>status</th><th>createdAt</th><th>evidence</th></tr>
