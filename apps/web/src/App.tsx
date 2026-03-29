@@ -839,26 +839,6 @@ export default function App() {
     ];
   }, [runs]);
 
-  const runManualCollect = (source: "twitter" | "telegram" | "discord" | "chain" | "whitepaper") => {
-    if (source === "twitter") {
-      void runAction("正在通过浏览器采集 Twitter 页面...", "collect-twitter-browser");
-      return;
-    }
-    if (source === "telegram") {
-      void runAction("正在采集 Telegram 社区...", "collect-telegram");
-      return;
-    }
-    if (source === "discord") {
-      void runAction("正在采集 Discord 社区...", "collect-discord");
-      return;
-    }
-    if (source === "chain") {
-      void runAction("正在采集链上指标...", "collect-onchain");
-      return;
-    }
-    void runAction("正在解析 Whitepaper PDF...", "collect-whitepaper-pdf");
-  };
-
   return (
     <main className="prototype-layout">
       <aside className="panel-col left-col">
@@ -956,16 +936,6 @@ export default function App() {
               <button type="button" className="workflow-btn" onClick={handleSyncSourcesToTask} disabled={!hasTask || isSyncingSources || collectionInProgress}>
                 去同步
               </button>
-              <details className="advanced-box">
-                <summary>高级操作（手动采集某个来源）</summary>
-                <div className="action-row">
-                  <button type="button" className="workflow-btn" onClick={() => runManualCollect("twitter")}>采集 Twitter</button>
-                  <button type="button" className="workflow-btn" onClick={() => runManualCollect("telegram")}>采集 TG</button>
-                  <button type="button" className="workflow-btn" onClick={() => runManualCollect("discord")}>采集 Discord</button>
-                  <button type="button" className="workflow-btn" onClick={() => runManualCollect("chain")}>采集链上</button>
-                  <button type="button" className="workflow-btn" onClick={() => runManualCollect("whitepaper")}>解析 PDF</button>
-                </div>
-              </details>
             </div>
           </section>
 
@@ -995,12 +965,13 @@ export default function App() {
               <p className="section-label">Step 3 · 数据采集</p>
               <table className="run-table">
                 <thead>
-                  <tr><th>source</th><th>status</th><th>createdAt</th><th>evidence</th></tr>
+                  <tr><th>source</th><th>是否采集</th><th>status</th><th>createdAt</th><th>evidence</th></tr>
                 </thead>
                 <tbody>
                   {sourceRunRows.map((row) => (
                     <tr key={row.source}>
                       <td>{row.source}</td>
+                      <td>是</td>
                       <td>{row.run ? sourceStatusLabel(row.run.status) : "未采集"}</td>
                       <td>{row.run ? new Date(row.run.created_at).toLocaleString("zh-CN") : "--"}</td>
                       <td>{row.run?.evidence_count ?? "--"}</td>
