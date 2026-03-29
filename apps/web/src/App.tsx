@@ -1031,6 +1031,7 @@ export default function App() {
         </div>
       </section>
 
+      {currentStep === 4 ? (
       <aside className="panel-col right-col">
         <div className="panel-head">
           <p className="panel-title">人工复核</p>
@@ -1070,6 +1071,7 @@ export default function App() {
           </div>
         </div>
       </aside>
+      ) : null}
     </main>
   );
 }
