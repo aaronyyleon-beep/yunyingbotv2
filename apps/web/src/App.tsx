@@ -756,6 +756,7 @@ export default function App() {
             : canReview && selectedFactorId
               ? "Step 4：可提交当前三级因子复核。"
               : "Step 4：分析流程已完成，可按需复核。";
+  const sourceInputsDisabled = collectionInProgress;
 
   const nextStepLabel = !hasTask
     ? "创建任务"
@@ -990,7 +991,12 @@ export default function App() {
               <strong>当前卡点：{currentStepHint}</strong>
             </div>
             <div className="action-row">
-              <button type="button" className="workflow-btn primary" onClick={handleRunNextStep} disabled={isCreatingTask || isSyncingSources || collectionInProgress}>
+              <button
+                type="button"
+                className="workflow-btn primary"
+                onClick={handleRunNextStep}
+                disabled={isCreatingTask || isSyncingSources || collectionInProgress || (hasTask && sourceConfigDirty)}
+              >
                 运行下一步：{nextStepLabel}
               </button>
               <button type="button" className="workflow-btn" onClick={handleSyncSourcesToTask} disabled={!hasTask || isSyncingSources || collectionInProgress}>
@@ -1003,14 +1009,14 @@ export default function App() {
             <section className="content-card">
               <p className="section-label">{currentStep === 1 ? "Step 1 · 任务信息与来源输入" : "Step 2 · 来源配置同步"}</p>
               <div className="source-grid">
-                <label><span>website</span><input value={websiteInput} onChange={(event) => setWebsiteInput(event.target.value)} /></label>
-                <label><span>docs</span><input value={docsInput} onChange={(event) => setDocsInput(event.target.value)} /></label>
-                <label><span>twitter</span><input value={twitterInput} onChange={(event) => setTwitterInput(event.target.value)} /></label>
-                <label><span>telegram</span><input value={telegramInput} onChange={(event) => setTelegramInput(event.target.value)} /></label>
-                <label><span>discord</span><input value={discordInput} onChange={(event) => setDiscordInput(event.target.value)} /></label>
-                <label><span>chain</span><select value={chainInput} onChange={(event) => setChainInput(event.target.value as ChainValue)}>{CHAIN_OPTIONS.map((chain) => <option key={chain.value} value={chain.value}>{chain.label}</option>)}</select></label>
-                <label className="wide"><span>contracts</span><textarea value={contractInput} onChange={(event) => setContractInput(event.target.value)} /></label>
-                <label className="wide"><span>notes</span><textarea value={notesInput} onChange={(event) => setNotesInput(event.target.value)} /></label>
+                <label><span>website</span><input value={websiteInput} onChange={(event) => setWebsiteInput(event.target.value)} disabled={sourceInputsDisabled} /></label>
+                <label><span>docs</span><input value={docsInput} onChange={(event) => setDocsInput(event.target.value)} disabled={sourceInputsDisabled} /></label>
+                <label><span>twitter</span><input value={twitterInput} onChange={(event) => setTwitterInput(event.target.value)} disabled={sourceInputsDisabled} /></label>
+                <label><span>telegram</span><input value={telegramInput} onChange={(event) => setTelegramInput(event.target.value)} disabled={sourceInputsDisabled} /></label>
+                <label><span>discord</span><input value={discordInput} onChange={(event) => setDiscordInput(event.target.value)} disabled={sourceInputsDisabled} /></label>
+                <label><span>chain</span><select value={chainInput} onChange={(event) => setChainInput(event.target.value as ChainValue)} disabled={sourceInputsDisabled}>{CHAIN_OPTIONS.map((chain) => <option key={chain.value} value={chain.value}>{chain.label}</option>)}</select></label>
+                <label className="wide"><span>contracts</span><textarea value={contractInput} onChange={(event) => setContractInput(event.target.value)} disabled={sourceInputsDisabled} /></label>
+                <label className="wide"><span>notes</span><textarea value={notesInput} onChange={(event) => setNotesInput(event.target.value)} disabled={sourceInputsDisabled} /></label>
               </div>
               <div className="action-row">
                 <button type="button" className="workflow-btn" onClick={handleSyncSourcesToTask} disabled={!hasTask || isSyncingSources || collectionInProgress}>
