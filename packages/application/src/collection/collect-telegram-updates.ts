@@ -4,6 +4,7 @@ import type { AppDbClient } from "../db/client.js";
 import { upsertCommunityEvidence } from "../community/upsert-community-evidence.js";
 import { loadRepoEnv } from "../config/load-env.js";
 import { applyCollectionHardGate } from "./fresh-evidence-gate.js";
+import { recordCollectionRunPg } from "./record-collection-run-pg.js";
 
 type TelegramChatResponse = {
   ok: boolean;
@@ -191,6 +192,7 @@ const readBufferedMessages = async (db: AppDbClient, chatId: string, requestedWi
 export const collectTelegramUpdates = async (db: AppDbClient, repoRoot: string, taskId: string): Promise<PublicCollectionResult> => {
   const env = loadRepoEnv(repoRoot);
   const token = env.TELEGRAM_BOT_TOKEN?.trim();
+  const now = nowIso();
 
   const sources = await db.query<{
     id: string;
@@ -218,12 +220,32 @@ export const collectTelegramUpdates = async (db: AppDbClient, repoRoot: string, 
   if (!token) {
     warnings.push("TELEGRAM_BOT_TOKEN is not configured.");
     await applyCollectionHardGate(db, { taskId, sourceTypes: ["telegram"], status: "failed", evidenceCount: 0 });
+    await recordCollectionRunPg(db, {
+      taskId,
+      collectorKey: "telegram_bot_ingestion",
+      sourceType: "telegram",
+      status: "failed",
+      collectedCount: 0,
+      skippedCount: sources.length,
+      evidenceCount: 0,
+      warnings
+    });
     return { taskId, collectedSources, skippedSources: sources.map((source) => source.source_url), warnings, evidenceCount };
   }
 
   if (sources.length === 0) {
     warnings.push("Current task has no Telegram source.");
     await applyCollectionHardGate(db, { taskId, sourceTypes: ["telegram"], status: "failed", evidenceCount: 0 });
+    await recordCollectionRunPg(db, {
+      taskId,
+      collectorKey: "telegram_bot_ingestion",
+      sourceType: "telegram",
+      status: "failed",
+      collectedCount: 0,
+      skippedCount: 0,
+      evidenceCount: 0,
+      warnings
+    });
     return { taskId, collectedSources, skippedSources, warnings, evidenceCount };
   }
 
@@ -232,6 +254,16 @@ export const collectTelegramUpdates = async (db: AppDbClient, repoRoot: string, 
   if (!updatesPayload.ok || !Array.isArray(updatesPayload.result)) {
     warnings.push(`Telegram getUpdates failed: ${updatesPayload.description ?? "unknown_error"}`);
     await applyCollectionHardGate(db, { taskId, sourceTypes: ["telegram"], status: "failed", evidenceCount: 0 });
+    await recordCollectionRunPg(db, {
+      taskId,
+      collectorKey: "telegram_bot_ingestion",
+      sourceType: "telegram",
+      status: "failed",
+      collectedCount: 0,
+      skippedCount: sources.length,
+      evidenceCount: 0,
+      warnings
+    });
     return { taskId, collectedSources, skippedSources: sources.map((source) => source.source_url), warnings, evidenceCount };
   }
 
@@ -248,6 +280,7 @@ export const collectTelegramUpdates = async (db: AppDbClient, repoRoot: string, 
     if (!target) {
       warnings.push(`Could not infer Telegram target from ${source.source_url}`);
       skippedSources.push(source.source_url);
+      await db.execute(`UPDATE sources SET access_status = $1, updated_at = $2 WHERE id = $3`, ["failed", now, source.id]);
       continue;
     }
 
@@ -256,6 +289,7 @@ export const collectTelegramUpdates = async (db: AppDbClient, repoRoot: string, 
     if (!chatPayload.ok || !chatPayload.result) {
       warnings.push(`Telegram getChat failed for ${target}: ${chatPayload.description ?? "unknown_error"}`);
       skippedSources.push(source.source_url);
+      await db.execute(`UPDATE sources SET access_status = $1, updated_at = $2 WHERE id = $3`, ["failed", now, source.id]);
       continue;
     }
 
@@ -267,6 +301,7 @@ export const collectTelegramUpdates = async (db: AppDbClient, repoRoot: string, 
     if (bufferedMessages.length === 0) {
       warnings.push(`Telegram buffer has no readable messages for ${chatTitle} in the requested ${requestedWindowHours}h window.`);
       skippedSources.push(source.source_url);
+      await db.execute(`UPDATE sources SET access_status = $1, updated_at = $2 WHERE id = $3`, ["failed", now, source.id]);
       continue;
     }
 
@@ -503,6 +538,7 @@ export const collectTelegramUpdates = async (db: AppDbClient, repoRoot: string, 
 
     evidenceCount += result.evidenceCount;
     collectedSources.push(source.source_url);
+    await db.execute(`UPDATE sources SET access_status = $1, updated_at = $2 WHERE id = $3`, ["completed", now, source.id]);
   }
 
   if (maxUpdateId > 0) {
@@ -516,6 +552,16 @@ export const collectTelegramUpdates = async (db: AppDbClient, repoRoot: string, 
     sourceTypes: ["telegram"],
     status: runStatus,
     evidenceCount
+  });
+  await recordCollectionRunPg(db, {
+    taskId,
+    collectorKey: "telegram_bot_ingestion",
+    sourceType: "telegram",
+    status: runStatus,
+    collectedCount: collectedSources.length,
+    skippedCount: skippedSources.length,
+    evidenceCount,
+    warnings
   });
 
   return {
