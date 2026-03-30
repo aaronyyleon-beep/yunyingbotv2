@@ -752,11 +752,8 @@ export default function App() {
                 }
               : null;
 
-  const currentStep: 1 | 2 | 3 = !hasTask
-    ? 1
-    : sourceConfigDirty || collectionInProgress || !hasFreshCollection
-      ? 2
-      : 3;
+  const shouldStayInCollectionStep = sourceConfigDirty || collectionInProgress || (!hasFreshCollection && !hasAnalysisResult);
+  const currentStep: 1 | 2 | 3 = !hasTask ? 1 : shouldStayInCollectionStep ? 2 : 3;
 
   const currentStepHint = !hasTask
     ? "Step 1：请先创建任务。"
@@ -764,7 +761,7 @@ export default function App() {
       ? "Step 2：你修改了来源但还未同步。"
       : collectionInProgress
         ? "Step 2：采集进行中，请等待完成。"
-        : !hasFreshCollection
+        : !hasFreshCollection && !hasAnalysisResult
           ? "Step 2：尚未完成当前任务采集。"
           : !hasAnalysisResult
             ? "Step 3：尚未运行分析。"
@@ -779,7 +776,7 @@ export default function App() {
       ? "去同步"
       : collectionInProgress
         ? "等待采集完成"
-        : !hasFreshCollection
+        : !hasFreshCollection && !hasAnalysisResult
           ? "采集已选来源"
           : !hasAnalysisResult
             ? "运行分析"
@@ -804,7 +801,7 @@ export default function App() {
       setActionState("当前采集任务仍在执行中，请稍后再继续下一步。");
       return;
     }
-    if (!hasFreshCollection) {
+    if (!hasAnalysisResult && !hasFreshCollection) {
       const enabledRows = sourceRunRows.filter((row) => collectEnabledBySource[row.source]);
       if (enabledRows.length === 0) {
         setActionState("请先在 Step 2 开启至少一个来源采集（是否采集=是）。");
