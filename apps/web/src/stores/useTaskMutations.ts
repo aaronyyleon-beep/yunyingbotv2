@@ -21,7 +21,12 @@ const normalizeContractList = (value: string) =>
 
 const normalizeCollectionResult = (payload: Record<string, unknown>): CollectionActionResult => ({
   warnings: Array.isArray(payload.warnings) ? (payload.warnings as string[]) : [],
-  evidenceCount: typeof payload.evidenceCount === "number" ? payload.evidenceCount : 0,
+  evidenceCount:
+    typeof payload.evidenceCount === "number"
+      ? payload.evidenceCount
+      : typeof payload.evidence_count === "number"
+        ? payload.evidence_count
+        : 0,
   collectedSources: Array.isArray(payload.collectedSources)
     ? (payload.collectedSources as string[])
     : Array.isArray(payload.collectedContracts)

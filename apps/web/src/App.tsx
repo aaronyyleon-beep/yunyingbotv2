@@ -477,7 +477,12 @@ export default function App() {
 
   const normalizeCollectionResult = (payload: Record<string, unknown>): CollectionActionResult => ({
     warnings: Array.isArray(payload.warnings) ? (payload.warnings as string[]) : [],
-    evidenceCount: typeof payload.evidenceCount === "number" ? payload.evidenceCount : 0,
+    evidenceCount:
+      typeof payload.evidenceCount === "number"
+        ? payload.evidenceCount
+        : typeof payload.evidence_count === "number"
+          ? payload.evidence_count
+          : 0,
     collectedSources: Array.isArray(payload.collectedSources)
       ? (payload.collectedSources as string[])
       : Array.isArray(payload.collectedContracts)
@@ -802,7 +807,18 @@ export default function App() {
           const response = await fetch(`/tasks/${selectedTaskId}/collection-runs`);
           if (!response.ok) return;
           const payload = (await response.json()) as { items: CollectionRun[] };
-          const hasAnyEvidence = (payload.items ?? []).some((run) => run.evidence_count > 0);
+          const hasAnyEvidence = (payload.items ?? []).some(
+            (run) => run.evidence_count > 0 && (run.status === "completed" || run.status === "partial")
+          );
+          setFreshlyCollectedTaskIds((current) => {
+            const next = new Set(current);
+            if (hasAnyEvidence) {
+              next.add(selectedTaskId);
+            } else {
+              next.delete(selectedTaskId);
+            }
+            return next;
+          });
           if (!hasAnyEvidence) {
             setActionState("目前全部采集失败，请提供至少一个有效数据源后重试。");
           }
@@ -1180,6 +1196,130 @@ export default function App() {
                 <div className="kpi-card"><span>overallLabel</span><strong>{report?.report?.risk_level ?? "--"}</strong></div>
                 <div className="kpi-card"><span>recommendation</span><strong>{finalReport?.conclusion_and_next_step?.conclusion ? "watch" : "--"}</strong></div>
               </div>
+              {finalReport ? (
+                <div className="final-report-layout">
+                  <section className="report-section">
+                    <div className="panel-title-row">
+                      <h4>执行摘要</h4>
+                      <span className={`score-pill ${scoreTone(finalReport.execution_summary.final_score)}`}>
+                        {finalReport.execution_summary.final_score.toFixed(1)} / {finalReport.execution_summary.risk_level_label}
+                      </span>
+                    </div>
+                    <p className="lead">{finalReport.execution_summary.headline}</p>
+                    <p className="muted">{finalReport.overall_assessment.conclusion}</p>
+                    <div className="chip-row">
+                      <span className="chip">建议：{finalReport.overall_assessment.recommended_decision}</span>
+                      <span className="chip">版本：{versionTypeLabel(finalReport.meta.report_version_type)}</span>
+                      <span className="chip">复核次数：{finalReport.meta.review_count}</span>
+                    </div>
+                  </section>
+
+                  <section className="report-section">
+                    <div className="panel-title-row">
+                      <h4>维度概览</h4>
+                      <span className="panel-tag">{finalReport.dimension_overview.items.length} 个维度</span>
+                    </div>
+                    <div className="dimension-grid">
+                      {finalReport.dimension_overview.items.map((dimension) => (
+                        <div key={dimension.dimension_key} className="dimension-card static-card report-dimension-card">
+                          <span>{dimension.dimension_name}</span>
+                          <strong className={scoreTone(dimension.final_score)}>{dimension.final_score.toFixed(1)}</strong>
+                          <p>{dimension.judgement}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+
+                  {finalReport.key_issues.items.length > 0 ? (
+                    <section className="report-section">
+                      <div className="panel-title-row">
+                        <h4>关键问题</h4>
+                        <span className="panel-tag">{finalReport.key_issues.items.length} 项</span>
+                      </div>
+                      <div className="report-list">
+                        {finalReport.key_issues.items.map((item) => (
+                          <div key={item.factor_key} className="report-list-item risk-item">
+                            <strong>{item.factor_name}</strong>
+                            <p>{item.issue_statement}</p>
+                            <p className="muted">{item.business_impact}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </section>
+                  ) : null}
+
+                  {finalReport.key_evidence.groups.length > 0 ? (
+                    <section className="report-section">
+                      <div className="panel-title-row">
+                        <h4>关键证据</h4>
+                        <span className="panel-tag">{finalReport.key_evidence.groups.length} 组</span>
+                      </div>
+                      <div className="report-list">
+                        {finalReport.key_evidence.groups.map((group) => (
+                          <div key={group.source_group} className="report-list-item">
+                            <strong>{group.source_group}</strong>
+                            <div className="evidence-stack compact-stack">
+                              {group.items.map((item) => (
+                                <div key={`${group.source_group}-${item.title}-${item.captured_at}`} className="evidence-card">
+                                  <span className="evidence-type">{evidenceTypeLabel(item.evidence_type)}</span>
+                                  <strong>{item.title}</strong>
+                                  <p>{item.summary}</p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </section>
+                  ) : null}
+
+                  <section className="report-section">
+                    <div className="panel-title-row">
+                      <h4>结论与建议</h4>
+                      <span className="panel-tag">报告出口</span>
+                    </div>
+                    <p>{finalReport.conclusion_and_next_step.conclusion}</p>
+                    <div className="chip-row">
+                      {finalReport.conclusion_and_next_step.priority_review_areas.map((item) => (
+                        <span key={`priority-${item}`} className="chip risk-chip">优先复核：{item}</span>
+                      ))}
+                    </div>
+                    <div className="chip-row">
+                      {finalReport.conclusion_and_next_step.retained_strengths.map((item) => (
+                        <span key={`strength-${item}`} className="chip opp-chip">保留优势：{item}</span>
+                      ))}
+                    </div>
+                    <p className="muted">{finalReport.conclusion_and_next_step.strategy_entry_note}</p>
+                    {finalReport.overall_assessment.data_quality_note ? (
+                      <p className="muted">数据质量提示：{finalReport.overall_assessment.data_quality_note}</p>
+                    ) : null}
+                  </section>
+                </div>
+              ) : (
+                <section className="report-section">
+                  <h4>报告未生成</h4>
+                  <p className="muted">
+                    当前还没有最终分析报告。请先完成至少一个来源的成功采集，然后点击“运行因子分析”。
+                  </p>
+                  <div className="report-list">
+                    {runs
+                      .filter((run) => run.status === "failed" || run.status === "partial")
+                      .slice(0, 6)
+                      .map((run) => (
+                        <div key={run.id} className="report-list-item">
+                          <strong>{sourceTypeLabel(run.source_type)} · {sourceStatusLabel(run.status)}</strong>
+                          <p>{run.warnings[0] ?? "未返回具体失败信息，请检查来源配置和权限。"}</p>
+                        </div>
+                      ))}
+                    {runs.filter((run) => run.status === "failed" || run.status === "partial").length === 0 ? (
+                      <div className="report-list-item">
+                        <strong>等待分析</strong>
+                        <p>尚未检测到可触发分析的采集结果。</p>
+                      </div>
+                    ) : null}
+                  </div>
+                </section>
+              )}
             </section>
           ) : null}
             </>
