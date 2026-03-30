@@ -7,6 +7,7 @@ export type TaskSummary = {
 };
 
 export type TaskSnapshot = {
+  task: { fresh_evidence_ready: boolean };
   project: { name: string };
   summary: {
     evidenceCount: number;

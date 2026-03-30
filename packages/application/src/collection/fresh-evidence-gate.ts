@@ -20,7 +20,7 @@ export const applyCollectionHardGate = async (
   await db.execute(
     `UPDATE analysis_tasks
      SET collection_status = $1,
-         fresh_evidence_ready = $2,
+         fresh_evidence_ready = CASE WHEN $2 THEN TRUE ELSE fresh_evidence_ready END,
          updated_at = $3
      WHERE id = $4`,
     [freshEvidenceReady ? "evidence_ready" : "collecting", freshEvidenceReady, now, input.taskId]

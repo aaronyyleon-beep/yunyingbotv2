@@ -521,6 +521,18 @@ export default function App() {
     setSources(sourcesPayload.items);
     setSourceDataTaskId(taskId);
     setRuns(runsPayload.items);
+    // Sync fresh evidence gate from backend — fixes historical tasks and page-refresh state loss
+    if (!twitterQueueAtByTask[taskId]) {
+      setFreshlyCollectedTaskIds((current) => {
+        const next = new Set(current);
+        if (snapshotPayload.task.fresh_evidence_ready) {
+          next.add(taskId);
+        } else {
+          next.delete(taskId);
+        }
+        return next;
+      });
+    }
     const queuedAt = twitterQueueAtByTask[taskId];
     if (queuedAt) {
       const queuedAtMs = new Date(queuedAt).getTime();

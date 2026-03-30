@@ -95,7 +95,7 @@ const captureTwitterPage = async (
       Object.defineProperty(navigator, "webdriver", { get: () => undefined });
     });
     const page = context.pages()[0] ?? (await context.newPage());
-    await page.goto(normalizeTwitterUrl(sourceUrl), { waitUntil: "domcontentloaded", timeout: 30000 });
+    await page.goto(normalizeTwitterUrl(sourceUrl), { waitUntil: "domcontentloaded", timeout: 60000 });
     await page.waitForTimeout(2800);
 
     const extractOnce = async (): Promise<Omit<TwitterPageExtraction, "tweetQualityScore" | "commentQualityScore">> =>
