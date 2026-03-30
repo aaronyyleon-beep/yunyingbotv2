@@ -521,19 +521,32 @@ export default function App() {
     setSources(sourcesPayload.items);
     setSourceDataTaskId(taskId);
     setRuns(runsPayload.items);
-    // Sync fresh evidence gate from backend — fixes historical tasks and page-refresh state loss
-    if (!twitterQueueAtByTask[taskId]) {
-      setFreshlyCollectedTaskIds((current) => {
-        const next = new Set(current);
-        if (snapshotPayload.task.fresh_evidence_ready) {
-          next.add(taskId);
-        } else {
-          next.delete(taskId);
-        }
+    // Always sync fresh evidence gate from backend to avoid frontend stale-state lock.
+    setFreshlyCollectedTaskIds((current) => {
+      const next = new Set(current);
+      if (snapshotPayload.task.fresh_evidence_ready) {
+        next.add(taskId);
+      } else {
+        next.delete(taskId);
+      }
+      return next;
+    });
+    const queuedAt = twitterQueueAtByTask[taskId];
+    const twitterRuns = runsPayload.items
+      .filter((run) => run.collector_key === "twitter_browser_fetch")
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    const hasTwitterInFlight = twitterRuns.some((run) => run.status === "queued" || run.status === "running");
+    const hasTwitterTerminalRun = twitterRuns.some((run) => ["completed", "partial", "failed"].includes(run.status));
+
+    if (queuedAt && !hasTwitterInFlight && hasTwitterTerminalRun) {
+      // Clear stale queue marker to prevent Step 2 from getting stuck on "collection in progress".
+      setTwitterQueueAtByTask((current) => {
+        const next = { ...current };
+        delete next[taskId];
         return next;
       });
     }
-    const queuedAt = twitterQueueAtByTask[taskId];
+
     if (queuedAt) {
       const queuedAtMs = new Date(queuedAt).getTime();
       const hasTwitterRunAfterQueue = runsPayload.items.some((run) =>
