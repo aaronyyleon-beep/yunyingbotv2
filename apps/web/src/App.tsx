@@ -797,6 +797,18 @@ export default function App() {
         for (const row of enabledRows) {
           await runAction(row.actionLabel, row.actionPath);
         }
+        if (!selectedTaskId) return;
+        try {
+          const response = await fetch(`/tasks/${selectedTaskId}/collection-runs`);
+          if (!response.ok) return;
+          const payload = (await response.json()) as { items: CollectionRun[] };
+          const hasAnyEvidence = (payload.items ?? []).some((run) => run.evidence_count > 0);
+          if (!hasAnyEvidence) {
+            setActionState("目前全部采集失败，请提供至少一个有效数据源后重试。");
+          }
+        } catch {
+          // no-op: keep existing action state from individual collectors
+        }
       })();
       return;
     }
