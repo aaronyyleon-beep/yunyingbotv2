@@ -131,8 +131,6 @@ export function useTaskMutations(args: UseTaskMutationsArgs) {
             const next = new Set(current);
             if (collectionResult.evidenceCount > 0) {
               next.add(args.selectedTaskId as string);
-            } else {
-              next.delete(args.selectedTaskId as string);
             }
             return next;
           });
@@ -145,13 +143,6 @@ export function useTaskMutations(args: UseTaskMutationsArgs) {
           args.setActionState(`${label.replace("正在", "").replace("...", "")}已刷新。`);
         }
       } catch (error) {
-        if (path !== "analyze-factors") {
-          args.setFreshlyCollectedTaskIds((current) => {
-            const next = new Set(current);
-            next.delete(args.selectedTaskId as string);
-            return next;
-          });
-        }
         args.setActionState(`${label.replace("正在", "").replace("...", "")}失败：${error instanceof Error ? error.message : "unknown_error"}`);
       } finally {
         args.setActiveActionPath(null);
