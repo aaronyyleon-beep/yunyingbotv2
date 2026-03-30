@@ -5,6 +5,7 @@ import {
   completeTwitterBrowserJob,
   failTwitterBrowserJob,
   getPostgresDatabase,
+  ingestTelegramBuffer,
   loadRuntimeSnapshot
 } from '@yunyingbot/application';
 
@@ -12,18 +13,58 @@ const repoRoot = path.resolve(import.meta.dirname, '../../..');
 const workerId = `${process.pid}`;
 const pollIntervalMs = Number(process.env.WORKER_POLL_INTERVAL_MS ?? 3000);
 const idleLogEvery = Number(process.env.WORKER_IDLE_LOG_EVERY ?? 20);
+const telegramIngestEnabled = (process.env.TELEGRAM_INGEST_ENABLED ?? 'true').toLowerCase() !== 'false';
+const telegramIngestIntervalMs = Number(process.env.TELEGRAM_INGEST_INTERVAL_MS ?? 5000);
 const db = getPostgresDatabase();
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 let running = true;
 let idleTicks = 0;
+let telegramDisabledLogged = false;
 
 process.on('SIGINT', () => { running = false; });
 process.on('SIGTERM', () => { running = false; });
 
+const runTelegramIngestionLoop = async () => {
+  if (!telegramIngestEnabled) {
+    console.log('[worker] telegram ingestion loop disabled (TELEGRAM_INGEST_ENABLED=false)');
+    return;
+  }
+  console.log(`[worker] telegram ingestion loop started interval=${telegramIngestIntervalMs}ms`);
+  while (running) {
+    try {
+      const result = await ingestTelegramBuffer(db, repoRoot);
+      if (!result.enabled) {
+        if (!telegramDisabledLogged && result.warnings.length > 0) {
+          console.warn('[worker] telegram ingestion disabled:', result.warnings.join(' | '));
+          telegramDisabledLogged = true;
+        }
+      } else if (result.updatesFetched > 0 || result.messagesBuffered > 0 || result.warnings.length > 0) {
+        telegramDisabledLogged = false;
+        console.log(
+          `[worker] telegram ingestion updates=${result.updatesFetched} seen=${result.messagesSeen} buffered=${result.messagesBuffered}` +
+            (result.warnings.length > 0 ? ` warnings=${result.warnings.join(' | ')}` : '')
+        );
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'unknown_error';
+      console.error(`[worker] telegram ingestion failed: ${message}`);
+    }
+    await sleep(telegramIngestIntervalMs);
+  }
+  console.log('[worker] telegram ingestion loop stopped');
+};
+
 const main = async () => {
   const snapshot = loadRuntimeSnapshot(repoRoot);
   console.log('[worker] runtime snapshot loaded');
-  console.log(JSON.stringify({ generatedAt: snapshot.generatedAt, workerId, pollIntervalMs }, null, 2));
+  console.log(
+    JSON.stringify(
+      { generatedAt: snapshot.generatedAt, workerId, pollIntervalMs, telegramIngestEnabled, telegramIngestIntervalMs },
+      null,
+      2
+    )
+  );
+  const telegramIngestionLoop = runTelegramIngestionLoop();
   while (running) {
     let job;
     try {
@@ -51,6 +92,7 @@ const main = async () => {
       console.error(`[worker] job failed ${job.jobId}: ${message}`);
     }
   }
+  await telegramIngestionLoop;
   console.log('[worker] stopping gracefully');
 };
 void main();

@@ -1,4 +1,3 @@
-import { randomUUID } from "node:crypto";
 import type { PublicCollectionResult } from "@yunyingbot/shared";
 import type { AppDbClient } from "../db/client.js";
 import { upsertCommunityEvidence } from "../community/upsert-community-evidence.js";
@@ -14,37 +13,6 @@ type TelegramChatResponse = {
     username?: string;
     type?: string;
   };
-  description?: string;
-};
-
-type TelegramUpdate = {
-  update_id: number;
-  message?: TelegramMessage;
-  edited_message?: TelegramMessage;
-};
-
-type TelegramMessage = {
-  message_id: number;
-  date: number;
-  message_thread_id?: number;
-  text?: string;
-  caption?: string;
-  from?: {
-    id: number;
-    username?: string;
-    first_name?: string;
-  };
-  chat: {
-    id: number;
-    title?: string;
-    username?: string;
-    type?: string;
-  };
-};
-
-type TelegramUpdatesResponse = {
-  ok: boolean;
-  result?: TelegramUpdate[];
   description?: string;
 };
 
@@ -129,35 +97,6 @@ const sampleUnique = <T>(items: T[], limit: number, keyFn: (item: T) => string):
   }
 
   return result;
-};
-
-const insertTelegramMessagesIntoBuffer = async (db: AppDbClient, messages: TelegramMessage[]) => {
-  const now = nowIso();
-
-  for (const message of messages) {
-    const text = normalizeText(message.text ?? message.caption ?? "");
-    if (!text) continue;
-
-    await db.execute(
-      `INSERT INTO community_message_buffer (
-        id, platform, external_chat_id, external_message_id, chat_title, author_id, author_label, text_content, sent_at, raw_payload, created_at
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
-      ON CONFLICT (platform, external_chat_id, external_message_id) DO NOTHING`,
-      [
-        randomUUID(),
-        "telegram",
-        String(message.chat.id),
-        String(message.message_id),
-        message.chat.title ?? message.chat.username ?? null,
-        message.from?.id ? String(message.from.id) : null,
-        message.from?.username ?? message.from?.first_name ?? String(message.from?.id ?? "unknown"),
-        text,
-        new Date(message.date * 1000).toISOString(),
-        JSON.stringify(message),
-        now
-      ]
-    );
-  }
 };
 
 const readBufferedMessages = async (db: AppDbClient, chatId: string, requestedWindowHours: number): Promise<BufferedCommunityMessage[]> => {
@@ -249,32 +188,6 @@ export const collectTelegramUpdates = async (db: AppDbClient, repoRoot: string, 
     return { taskId, collectedSources, skippedSources, warnings, evidenceCount };
   }
 
-  const updatesResponse = await fetch(`https://api.telegram.org/bot${token}/getUpdates?limit=100`);
-  const updatesPayload = (await updatesResponse.json()) as TelegramUpdatesResponse;
-  if (!updatesPayload.ok || !Array.isArray(updatesPayload.result)) {
-    warnings.push(`Telegram getUpdates failed: ${updatesPayload.description ?? "unknown_error"}`);
-    await applyCollectionHardGate(db, { taskId, sourceTypes: ["telegram"], status: "failed", evidenceCount: 0 });
-    await recordCollectionRunPg(db, {
-      taskId,
-      collectorKey: "telegram_bot_ingestion",
-      sourceType: "telegram",
-      status: "failed",
-      collectedCount: 0,
-      skippedCount: sources.length,
-      evidenceCount: 0,
-      warnings
-    });
-    return { taskId, collectedSources, skippedSources: sources.map((source) => source.source_url), warnings, evidenceCount };
-  }
-
-  const updates = updatesPayload.result;
-  const maxUpdateId = updates.reduce((max, item) => Math.max(max, item.update_id), 0);
-  const updateMessages = updates
-    .map((item) => item.message ?? item.edited_message ?? null)
-    .filter((message): message is TelegramMessage => Boolean(message));
-
-  await insertTelegramMessagesIntoBuffer(db, updateMessages);
-
   for (const source of sources) {
     const target = extractTelegramTarget(source.source_url, source.target_label);
     if (!target) {
@@ -299,7 +212,10 @@ export const collectTelegramUpdates = async (db: AppDbClient, repoRoot: string, 
     const bufferedMessages = await readBufferedMessages(db, chatId, requestedWindowHours);
 
     if (bufferedMessages.length === 0) {
-      warnings.push(`Telegram buffer has no readable messages for ${chatTitle} in the requested ${requestedWindowHours}h window.`);
+      warnings.push(
+        `Telegram buffer has no readable messages for ${chatTitle} in the requested ${requestedWindowHours}h window. ` +
+          `Please ensure ingestion worker is running and new messages have arrived after bot access is granted.`
+      );
       skippedSources.push(source.source_url);
       await db.execute(`UPDATE sources SET access_status = $1, updated_at = $2 WHERE id = $3`, ["failed", now, source.id]);
       continue;
@@ -539,10 +455,6 @@ export const collectTelegramUpdates = async (db: AppDbClient, repoRoot: string, 
     evidenceCount += result.evidenceCount;
     collectedSources.push(source.source_url);
     await db.execute(`UPDATE sources SET access_status = $1, updated_at = $2 WHERE id = $3`, ["completed", now, source.id]);
-  }
-
-  if (maxUpdateId > 0) {
-    await fetch(`https://api.telegram.org/bot${token}/getUpdates?offset=${maxUpdateId + 1}&limit=1`);
   }
 
   const runStatus: "completed" | "partial" | "failed" =

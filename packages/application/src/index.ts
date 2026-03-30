@@ -6,6 +6,7 @@ export { collectOnchain } from "./collection/collect-onchain.js";
 export { collectOnchainPg } from "./collection/collect-onchain-pg.js";
 export { collectDiscordMessages } from "./collection/collect-discord-messages.js";
 export { collectTelegramUpdates } from "./collection/collect-telegram-updates.js";
+export { ingestTelegramBuffer } from "./collection/ingest-telegram-buffer.js";
 export { collectWhitepaperPdf } from "./collection/collect-whitepaper-pdf.js";
 export { collectWhitepaperPdfPg } from "./collection/collect-whitepaper-pdf-pg.js";
 export { collectTwitterBrowser } from "./collection/collect-twitter-browser.js";
