@@ -941,6 +941,23 @@ export default function App() {
     }
   };
 
+  const getCollectionRunNote = (run: CollectionRun | null): string => {
+    if (!run) {
+      return "--";
+    }
+    const warning = run.warnings.find((item) => item.trim().length > 0);
+    if (warning) {
+      return warning;
+    }
+    if (run.status === "failed") {
+      return "采集失败，但未返回明确原因。请检查来源可访问性与凭证配置。";
+    }
+    if (run.status === "partial") {
+      return "仅部分采集成功，建议补充来源权限或调整目标链接。";
+    }
+    return "采集成功。";
+  };
+
   return (
     <main className="prototype-layout">
       <aside className="panel-col left-col">
@@ -1071,7 +1088,7 @@ export default function App() {
               <p className="section-label">Step 2 · 数据采集</p>
               <table className="run-table">
                 <thead>
-                  <tr><th>source</th><th>目标链接/链</th><th>是否采集</th><th>status</th><th>createdAt</th><th>evidence</th></tr>
+                  <tr><th>source</th><th>目标链接/链</th><th>是否采集</th><th>status</th><th>createdAt</th><th>evidence</th><th>Note</th></tr>
                 </thead>
                 <tbody>
                   {sourceRunRows.map((row) => (
@@ -1142,6 +1159,7 @@ export default function App() {
                       <td>{row.run ? sourceStatusLabel(row.run.status) : "未采集"}</td>
                       <td>{row.run ? new Date(row.run.created_at).toLocaleString("zh-CN") : "--"}</td>
                       <td>{row.run?.evidence_count ?? "--"}</td>
+                      <td className={`run-note-cell ${row.run?.status ?? "none"}`}>{getCollectionRunNote(row.run)}</td>
                     </tr>
                   ))}
                 </tbody>

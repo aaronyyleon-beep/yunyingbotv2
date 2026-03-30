@@ -1180,6 +1180,22 @@ button {
   color: var(--muted);
 }
 
+.run-note-cell {
+  max-width: 360px;
+  white-space: normal;
+  word-break: break-word;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.run-note-cell.partial {
+  color: var(--warn);
+}
+
+.run-note-cell.failed {
+  color: var(--risk);
+}
+
 .step2-inline-input,
 .step2-inline-select {
   width: 100%;
