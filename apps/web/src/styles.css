@@ -1,14 +1,14 @@
 :root {
-  --bg: #081028;
-  --panel: #0a1330;
-  --panel-strong: #0b1739;
-  --line: rgba(52, 59, 79, 0.9);
-  --text: #eaf1ff;
-  --muted: #aeb9e1;
-  --signal: #5fa0ff;
-  --warn: #f2b84a;
-  --risk: #f2726a;
-  --good: #31c48d;
+  --bg: #fffaf4;
+  --panel: #ffffff;
+  --panel-strong: #fff7ed;
+  --line: rgba(245, 158, 11, 0.24);
+  --text: #1f2937;
+  --muted: #6b7280;
+  --signal: #f97316;
+  --warn: #d97706;
+  --risk: #dc2626;
+  --good: #16a34a;
 }
 
 * {
@@ -19,7 +19,7 @@ body {
   margin: 0;
   min-height: 100vh;
   background:
-    radial-gradient(circle at top left, rgba(95, 160, 255, 0.16), transparent 28%),
+    radial-gradient(circle at top left, rgba(249, 115, 22, 0.16), transparent 28%),
     radial-gradient(circle at bottom right, rgba(49, 196, 141, 0.12), transparent 22%),
     var(--bg);
   color: var(--text);
@@ -39,7 +39,7 @@ button {
 .rail {
   border-right: 1px solid var(--line);
   padding: 24px 18px;
-  background: rgba(8, 16, 40, 0.88);
+  background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(20px);
 }
 
@@ -83,7 +83,7 @@ button {
   padding: 16px;
   border: 0.6px solid var(--line);
   border-radius: 20px;
-  background: #0a1330;
+  background: #ffffff;
 }
 
 .hierarchy-card {
@@ -94,8 +94,8 @@ button {
   border: 0.6px solid var(--line);
   border-radius: 20px;
   background:
-    linear-gradient(160deg, rgba(95, 160, 255, 0.12), rgba(255, 255, 255, 0.01)),
-    #0a1330;
+    linear-gradient(160deg, rgba(249, 115, 22, 0.12), rgba(255, 255, 255, 0.01)),
+    #ffffff;
 }
 
 .hierarchy-toolbar {
@@ -120,7 +120,7 @@ button {
   padding: 14px;
   border: 0.6px solid var(--line);
   border-radius: 18px;
-  background: #081028;
+  background: #fffaf4;
 }
 
 .task-selector {
@@ -139,7 +139,7 @@ button {
   width: 100%;
   border: 1px solid var(--line);
   border-radius: 14px;
-  background: #0b1739;
+  background: #fff7ed;
   color: var(--text);
   padding: 10px 12px;
   font: inherit;
@@ -187,11 +187,11 @@ button {
 
 .hierarchy-button:hover strong,
 .hierarchy-button:hover {
-  color: #ffffff;
+  color: var(--text);
 }
 
 .hierarchy-chip {
-  background: #0b1739;
+  background: #fff7ed;
   border: 0.6px solid var(--line);
   border-radius: 999px;
   color: var(--muted);
@@ -200,9 +200,9 @@ button {
 }
 
 .hierarchy-chip:hover {
-  background: #13234d;
-  color: #ffffff;
-  border-color: rgba(95, 160, 255, 0.66);
+  background: #ffe8cc;
+  color: var(--text);
+  border-color: rgba(249, 115, 22, 0.66);
 }
 
 .intake-card label {
@@ -247,7 +247,7 @@ button {
   width: 100%;
   border: 0.6px dashed var(--line);
   border-radius: 14px;
-  background: #0b1739;
+  background: #fff7ed;
   color: var(--muted);
   padding: 10px 12px;
   font: inherit;
@@ -257,7 +257,7 @@ button {
   margin-right: 12px;
   border: 0.6px solid var(--line);
   border-radius: 999px;
-  background: #0a1330;
+  background: #ffffff;
   color: var(--text);
   padding: 6px 12px;
   font: inherit;
@@ -284,7 +284,7 @@ button {
   padding: 12px 14px;
   border: 0.6px solid var(--line);
   border-radius: 16px;
-  background: #0b1739;
+  background: #fff7ed;
 }
 
 .collector-status strong {
@@ -328,14 +328,14 @@ button {
   height: 8px;
   border-radius: 999px;
   border: 0.6px solid var(--line);
-  background: #081028;
+  background: #fffaf4;
   overflow: hidden;
 }
 
 .wizard-progress-fill {
   height: 100%;
   border-radius: 999px;
-  background: linear-gradient(90deg, #5fa0ff, #7fc0ff);
+  background: linear-gradient(90deg, #f97316, #fb923c);
 }
 
 .stage-card {
@@ -344,7 +344,7 @@ button {
   padding: 12px;
   border: 0.6px solid var(--line);
   border-radius: 14px;
-  background: #0b1739;
+  background: #fff7ed;
 }
 
 .stage-card .muted {
@@ -367,16 +367,16 @@ button {
   padding: 12px;
   border: 0.6px solid var(--line);
   border-radius: 14px;
-  background: #081028;
+  background: #fffaf4;
   opacity: 0.72;
 }
 
 .wizard-step.is-active {
   opacity: 1;
-  border-color: rgba(95, 160, 255, 0.66);
+  border-color: rgba(249, 115, 22, 0.66);
   background:
-    linear-gradient(150deg, rgba(95, 160, 255, 0.18), rgba(255, 255, 255, 0.01)),
-    #0a1330;
+    linear-gradient(150deg, rgba(249, 115, 22, 0.18), rgba(255, 255, 255, 0.01)),
+    #ffffff;
 }
 
 .wizard-step.is-done {
@@ -389,7 +389,7 @@ button {
   border: 0.6px solid var(--line);
   border-radius: 14px;
   padding: 10px 12px;
-  background: #081028;
+  background: #fffaf4;
 }
 
 .stage-advanced > summary {
@@ -412,7 +412,7 @@ button {
   width: 100%;
   border: 1px solid var(--line);
   border-radius: 14px;
-  background: #0b1739;
+  background: #fff7ed;
   color: var(--text);
   padding: 10px 12px;
   font: inherit;
@@ -502,7 +502,7 @@ button {
 .hero-action,
 .submit-review {
   border: 0.6px solid var(--line);
-  background: #0b1739;
+  background: #fff7ed;
 }
 
 .hero-action,
@@ -514,13 +514,13 @@ button {
 
 .hero-action:hover,
 .submit-review:hover {
-  background: #13234d;
-  color: #ffffff;
-  border-color: rgba(95, 160, 255, 0.66);
+  background: #ffe8cc;
+  color: var(--text);
+  border-color: rgba(249, 115, 22, 0.66);
 }
 
 .secondary-action {
-  background: #081028;
+  background: #fffaf4;
   color: var(--muted);
 }
 
@@ -528,7 +528,7 @@ button {
   border: 1px dashed var(--line);
   border-radius: 24px;
   padding: 18px;
-  background: rgba(255, 255, 255, 0.02);
+  background: #fff7ed;
 }
 
 .empty-state-card strong {
@@ -574,7 +574,7 @@ button {
   border: 0.6px solid var(--line);
   border-radius: 24px;
   background:
-    linear-gradient(135deg, rgba(95, 160, 255, 0.12), rgba(255, 255, 255, 0.01)),
+    linear-gradient(135deg, rgba(249, 115, 22, 0.12), rgba(255, 255, 255, 0.01)),
     var(--panel);
 }
 
@@ -583,8 +583,8 @@ button {
   overflow: hidden;
   border: 0.6px solid #343b4f;
   border-radius: 7px;
-  background: #0b1739;
-  color: #aeb9e1;
+  background: #fff7ed;
+  color: #6b7280;
   font-family: "Mona Sans", "Noto Sans SC", sans-serif;
   font-size: 12px;
   font-weight: 500;
@@ -595,7 +595,7 @@ button {
 }
 
 .task-create-btn:hover:not(:disabled) {
-  background: #13234d;
+  background: #ffe8cc;
 }
 
 .task-create-btn:disabled {
@@ -604,10 +604,10 @@ button {
 }
 
 .task-create-btn.is-active {
-  background: #0a1330;
-  border-color: #cb3cff;
-  color: #ffffff;
-  box-shadow: 0 2px 12px rgba(203, 60, 255, 0.15);
+  background: #ffffff;
+  border-color: #f97316;
+  color: var(--text);
+  box-shadow: 0 2px 12px rgba(249, 115, 22, 0.15);
 }
 
 .task-create-btn.is-active::before {
@@ -617,7 +617,7 @@ button {
   top: 0;
   bottom: 0;
   width: 3px;
-  background: #cb3cff;
+  background: #f97316;
 }
 
 .metric-block {
@@ -647,7 +647,7 @@ button {
   border: 0.6px solid var(--line);
   border-radius: 24px;
   padding: 20px;
-  background: #0a1330;
+  background: #ffffff;
   min-height: 220px;
 }
 
@@ -699,7 +699,7 @@ button {
   border: 0.6px solid var(--line);
   border-radius: 18px;
   padding: 14px;
-  background: #0b1739;
+  background: #fff7ed;
 }
 
 .version-row {
@@ -906,7 +906,7 @@ button {
   position: relative;
   border: 0.6px solid transparent;
   border-radius: 7px;
-  background: #081028;
+  background: #fffaf4;
   color: var(--muted);
   font-size: 13px;
   font-weight: 500;
@@ -915,15 +915,15 @@ button {
 }
 
 .segment-btn:hover:not(:disabled) {
-  background: #0b1739;
-  color: #ffffff;
+  background: #fff7ed;
+  color: var(--text);
 }
 
 .segment-btn.is-active {
   border-color: #343b4f;
-  background: #0a1330;
-  color: #ffffff;
-  box-shadow: 0 2px 12px rgba(203, 60, 255, 0.15);
+  background: #ffffff;
+  color: var(--text);
+  box-shadow: 0 2px 12px rgba(249, 115, 22, 0.15);
 }
 
 .segment-btn.is-active::before {
@@ -933,7 +933,7 @@ button {
   top: 0;
   bottom: 0;
   width: 3px;
-  background: #cb3cff;
+  background: #f97316;
 }
 
 .panel-body {
@@ -948,7 +948,7 @@ button {
   width: 100%;
   border: 0.6px solid var(--line);
   border-radius: 12px;
-  background: #081028;
+  background: #fffaf4;
   color: var(--text);
   display: grid;
   gap: 4px;
@@ -963,9 +963,9 @@ button {
 }
 
 .task-item-card.is-active {
-  border-color: #cb3cff;
+  border-color: #f97316;
   box-shadow: 0 2px 12px rgba(203, 60, 255, 0.15);
-  background: #0b1739;
+  background: #fff7ed;
 }
 
 .inline-link-btn {
@@ -982,7 +982,7 @@ button {
 .content-card {
   border: 0.6px solid var(--line);
   border-radius: 12px;
-  background: #0b1739;
+  background: #fff7ed;
   padding: 12px;
   display: grid;
   gap: 10px;
@@ -1000,14 +1000,14 @@ button {
   height: 8px;
   border-radius: 999px;
   border: 0.6px solid var(--line);
-  background: #081028;
+  background: #fffaf4;
   overflow: hidden;
 }
 
 .stage-fill {
   height: 100%;
   border-radius: 999px;
-  background: linear-gradient(90deg, #5fa0ff, #7fc0ff);
+  background: linear-gradient(90deg, #f97316, #fb923c);
 }
 
 .step-grid {
@@ -1022,13 +1022,13 @@ button {
   padding: 8px;
   font-size: 11px;
   color: var(--muted);
-  background: #081028;
+  background: #fffaf4;
 }
 
 .step-pill.active {
-  border-color: rgba(95, 160, 255, 0.66);
-  color: #ffffff;
-  background: rgba(95, 160, 255, 0.15);
+  border-color: rgba(249, 115, 22, 0.66);
+  color: var(--text);
+  background: rgba(249, 115, 22, 0.15);
 }
 
 .step-pill.done {
@@ -1053,7 +1053,7 @@ button {
 .workflow-btn {
   border: 0.6px solid var(--line);
   border-radius: 8px;
-  background: #081028;
+  background: #fffaf4;
   color: var(--muted);
   padding: 8px 12px;
   font-size: 12px;
@@ -1061,13 +1061,13 @@ button {
 }
 
 .workflow-btn:hover:not(:disabled) {
-  background: #13234d;
-  border-color: rgba(95, 160, 255, 0.66);
-  color: #ffffff;
+  background: #ffe8cc;
+  border-color: rgba(249, 115, 22, 0.66);
+  color: var(--text);
 }
 
 .workflow-btn.primary {
-  background: #0b1739;
+  background: #fff7ed;
 }
 
 .workflow-btn:disabled {
@@ -1080,7 +1080,7 @@ button {
   border: 0.6px solid var(--line);
   border-radius: 10px;
   padding: 8px 10px;
-  background: #081028;
+  background: #fffaf4;
 }
 
 .advanced-box > summary {
@@ -1097,7 +1097,7 @@ button {
 .tab-btn {
   border: 0.6px solid var(--line);
   border-radius: 10px;
-  background: #081028;
+  background: #fffaf4;
   color: var(--muted);
   font-size: 12px;
   padding: 8px 10px;
@@ -1105,9 +1105,9 @@ button {
 }
 
 .tab-btn.is-active {
-  background: rgba(95, 160, 255, 0.12);
-  border-color: rgba(95, 160, 255, 0.66);
-  color: #ffffff;
+  background: rgba(249, 115, 22, 0.12);
+  border-color: rgba(249, 115, 22, 0.66);
+  color: var(--text);
 }
 
 .section-label {
@@ -1150,7 +1150,7 @@ button {
   width: 100%;
   border: 0.6px solid var(--line);
   border-radius: 8px;
-  background: #081028;
+  background: #fffaf4;
   color: var(--text);
   padding: 8px 10px;
   font: inherit;
@@ -1201,8 +1201,8 @@ button {
   width: 100%;
   border: 0.6px solid rgba(120, 160, 255, 0.25);
   border-radius: 10px;
-  background: rgba(10, 16, 32, 0.9);
-  color: #dfe8ff;
+  background: rgba(255, 255, 255, 0.96);
+  color: #1f2937;
   padding: 8px 10px;
   font: inherit;
   font-size: 12px;
@@ -1216,7 +1216,7 @@ button {
 }
 
 .step2-inline-input::placeholder {
-  color: rgba(223, 232, 255, 0.5);
+  color: rgba(107, 114, 128, 0.7);
 }
 
 .step2-inline-input:focus,
@@ -1230,7 +1230,7 @@ button {
 .step2-inline-select:disabled {
   opacity: 0.56;
   cursor: not-allowed;
-  background: rgba(10, 16, 32, 0.62);
+  background: rgba(255, 247, 237, 0.92);
 }
 
 .kpi-row {
@@ -1242,7 +1242,7 @@ button {
 .kpi-card {
   border: 0.6px solid var(--line);
   border-radius: 10px;
-  background: #081028;
+  background: #fffaf4;
   padding: 10px;
   display: grid;
   gap: 4px;
@@ -1261,7 +1261,7 @@ button {
   margin: 0;
   border: 0.6px solid var(--line);
   border-radius: 10px;
-  background: #081028;
+  background: #fffaf4;
   color: var(--muted);
   font-size: 12px;
   padding: 8px 10px;
@@ -1280,7 +1280,7 @@ button {
   padding: 4px 10px;
   font-size: 11px;
   border: 0.6px solid var(--line);
-  background: #081028;
+  background: #fffaf4;
 }
 
 .status-pill.ok {

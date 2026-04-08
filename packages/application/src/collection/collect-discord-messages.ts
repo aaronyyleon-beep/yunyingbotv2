@@ -16,6 +16,7 @@ type DiscordChannel = {
   id: string;
   name?: string;
   type: number;
+  guild_id?: string;
   parent_id?: string | null;
   position?: number;
 };
@@ -111,35 +112,35 @@ const sampleUnique = <T>(items: T[], limit: number, keyFn: (item: T) => string):
 };
 
 type DiscordSourceTarget =
-  | { kind: "invite"; value: string }
-  | { kind: "guild"; value: string };
+  | { kind: "invite"; value: string; preferredChannelId: string | null }
+  | { kind: "guild"; value: string; preferredChannelId: string | null };
 
 const isLikelyGuildId = (value: string): boolean => /^\d{12,}$/.test(value.trim());
 
 const resolveDiscordSourceTarget = (sourceUrl: string, fallbackLabel?: string | null): DiscordSourceTarget | null => {
-  if (fallbackLabel?.trim()) {
-    const normalized = fallbackLabel.trim();
-    if (isLikelyGuildId(normalized)) {
-      return { kind: "guild", value: normalized };
-    }
-    return { kind: "invite", value: normalized };
-  }
-
   try {
     const url = new URL(sourceUrl);
     const parts = url.pathname.split("/").filter(Boolean);
 
     if (parts[0] === "channels" && parts[1] && isLikelyGuildId(parts[1])) {
-      return { kind: "guild", value: parts[1] };
+      const preferredChannelId = parts[2] && /^\d{12,}$/.test(parts[2]) ? parts[2] : null;
+      return { kind: "guild", value: parts[1], preferredChannelId };
     }
 
     const tail = parts.at(-1);
     if (!tail) return null;
     if (isLikelyGuildId(tail)) {
-      return { kind: "guild", value: tail };
+      return { kind: "guild", value: tail, preferredChannelId: null };
     }
-    return { kind: "invite", value: tail };
+    return { kind: "invite", value: tail, preferredChannelId: null };
   } catch {
+    if (fallbackLabel?.trim()) {
+      const normalized = fallbackLabel.trim();
+      if (isLikelyGuildId(normalized)) {
+        return { kind: "guild", value: normalized, preferredChannelId: null };
+      }
+      return { kind: "invite", value: normalized, preferredChannelId: null };
+    }
     return null;
   }
 };
@@ -346,9 +347,24 @@ export const collectDiscordMessages = async (
         const guild = await requestDiscord<DiscordGuild>(token, `/guilds/${encodeURIComponent(guildId)}`);
         guildName = guild.name ?? guildId;
       } catch (error) {
-        warnings.push(error instanceof Error ? error.message : `Discord guild fetch failed for ${guildId}.`);
-        skippedSources.push(source.source_url);
-        continue;
+        // Compatibility: caller may pass a channel ID instead of guild ID.
+        // Try resolving channel -> guild to avoid hard failure on /scout channel:<id>.
+        try {
+          const channelMeta = await requestDiscord<DiscordChannel>(token, `/channels/${encodeURIComponent(guildId)}`);
+          if (channelMeta.guild_id) {
+            guildId = channelMeta.guild_id;
+            const guild = await requestDiscord<DiscordGuild>(token, `/guilds/${encodeURIComponent(guildId)}`);
+            guildName = guild.name ?? guildId;
+          } else {
+            warnings.push(error instanceof Error ? error.message : `Discord guild fetch failed for ${guildId}.`);
+            skippedSources.push(source.source_url);
+            continue;
+          }
+        } catch {
+          warnings.push(error instanceof Error ? error.message : `Discord guild fetch failed for ${guildId}.`);
+          skippedSources.push(source.source_url);
+          continue;
+        }
       }
     }
 
@@ -361,10 +377,19 @@ export const collectDiscordMessages = async (
       continue;
     }
 
-    const candidateChannels = channels
-      .filter(isCandidateChannel)
-      .sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
-      .slice(0, 12);
+    const candidateChannels =
+      target.preferredChannelId
+        ? channels.filter((channel) => channel.id === target.preferredChannelId)
+        : channels
+            .filter(isCandidateChannel)
+            .sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
+            .slice(0, 12);
+
+    if (target.preferredChannelId && candidateChannels.length === 0) {
+      warnings.push(`Preferred Discord channel ${target.preferredChannelId} is not accessible in guild ${guildName}.`);
+      skippedSources.push(source.source_url);
+      continue;
+    }
 
     let selectedChannelCount = 0;
     for (const channel of candidateChannels) {

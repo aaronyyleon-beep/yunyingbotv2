@@ -124,6 +124,10 @@ const inferCommunityTargetLabel = (sourceType: SourceCandidate["sourceType"], va
     if (sourceType === "telegram") return parts[0] ?? null;
     if (sourceType === "discord") {
       if (url.hostname.includes("discord.gg")) return parts[0] ?? null;
+      if (url.hostname.includes("discord.com") && parts[0] === "channels" && parts[1]) {
+        // For /channels/<guildId>/<channelId>, keep guildId as target label.
+        return parts[1];
+      }
       if (url.hostname.includes("discord.com")) return parts.at(-1) ?? null;
     }
     return parts.at(-1) ?? null;
