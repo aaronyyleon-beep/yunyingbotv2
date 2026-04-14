@@ -1,3 +1,6 @@
+export { hashPassword, verifyPassword, createSession, validateSession, loginUser, invalidateSession, createUser } from "./auth.js";
+export { getDiscordAuthUrl, exchangeDiscordCode, fetchDiscordUser, fetchDiscordGuilds, loginOrCreateDiscordUser, validateOAuthState } from "./auth.js";
+export type { AuthUser, DiscordUser, DiscordGuild } from "./auth.js";
 export { analyzeFactors } from "./analysis/analyze-factors.js";
 export { upsertCommunityEvidence } from "./community/upsert-community-evidence.js";
 export { collectPublicWebDocs } from "./collection/collect-public-web-docs.js";

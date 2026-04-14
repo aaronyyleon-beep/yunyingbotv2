@@ -1,4 +1,5 @@
 ﻿import { useEffect, useMemo, useState } from "react";
+import { authFetch } from "./authFetch";
 import { CreateTaskButton } from "./components/ui/CreateTaskButton";
 import { useTaskMutations } from "./stores/useTaskMutations";
 import { useTaskWorkflowStore } from "./stores/useTaskWorkflowStore";
@@ -380,7 +381,7 @@ const groupFactorEvidencesBySource = (evidences: FactorDetail["evidences"]) => {
   return groups;
 };
 
-export default function App() {
+export default function App({ onNavigateAccount }: { onNavigateAccount?: () => void }) {
   const [tasks, setTasks] = useState<TaskSummary[]>([]);
   const [historyLoaded, setHistoryLoaded] = useState(false);
   const [isCreatingTask, setIsCreatingTask] = useState(false);
@@ -463,12 +464,12 @@ export default function App() {
   const sourceDraftKeyFromTaskSources = useMemo(() => createSourceDraftKey(sourceDraftFromTaskSources), [sourceDraftFromTaskSources]);
 
   const fetchJson = async <T,>(url: string): Promise<T> => {
-    const response = await fetch(url);
+    const response = await authFetch(url);
     return (await response.json()) as T;
   };
 
   const fetchJsonOrNull = async <T,>(url: string): Promise<T | null> => {
-    const response = await fetch(url);
+    const response = await authFetch(url);
     if (response.status === 404) {
       return null;
     }
@@ -826,7 +827,7 @@ export default function App() {
         }
         if (!selectedTaskId) return;
         try {
-          const response = await fetch(`/tasks/${selectedTaskId}/collection-runs`);
+          const response = await authFetch(`/tasks/${selectedTaskId}/collection-runs`);
           if (!response.ok) return;
           const payload = (await response.json()) as { items: CollectionRun[] };
           const hasAnyEvidence = (payload.items ?? []).some(

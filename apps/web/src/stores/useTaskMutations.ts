@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import type { Dispatch, SetStateAction } from "react";
+import { authFetch } from "../authFetch";
 import type {
   CollectionActionResult,
   CollectionRun,
@@ -121,7 +122,7 @@ export function useTaskMutations(args: UseTaskMutationsArgs) {
       args.setActiveActionPath(path);
       args.setActionState(label);
       try {
-        const response = await fetch(`/tasks/${args.selectedTaskId}/${path}`, { method: "POST" });
+        const response = await authFetch(`/tasks/${args.selectedTaskId}/${path}`, { method: "POST" });
         const result = (await response.json()) as Record<string, unknown>;
         if (!response.ok) {
           throw new Error(typeof result.message === "string" ? result.message : typeof result.error === "string" ? result.error : "unknown_error");
@@ -157,7 +158,7 @@ export function useTaskMutations(args: UseTaskMutationsArgs) {
     const handleReviewFactor = async () => {
       if (!args.selectedTaskId || !args.selectedFactorId) return;
       args.setActionState("正在提交人工复核...");
-      await fetch(`/tasks/${args.selectedTaskId}/review-factor`, {
+      await authFetch(`/tasks/${args.selectedTaskId}/review-factor`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -176,7 +177,7 @@ export function useTaskMutations(args: UseTaskMutationsArgs) {
     const handleDiscoverLpCandidates = async () => {
       if (!args.selectedTaskId || !args.selectedSourceId) return;
       args.setActionState("正在检索相关 LP 候选...");
-      const response = await fetch(`/tasks/${args.selectedTaskId}/sources/${args.selectedSourceId}/discover-lp-candidates`, {
+      const response = await authFetch(`/tasks/${args.selectedTaskId}/sources/${args.selectedSourceId}/discover-lp-candidates`, {
         method: "POST"
       });
       const payload = (await response.json()) as { warnings?: string[]; candidates?: Array<{ lpAddress: string }> };
@@ -193,7 +194,7 @@ export function useTaskMutations(args: UseTaskMutationsArgs) {
     const handleLpCandidateAction = async (candidateId: string, action: "confirm" | "ignore") => {
       if (!args.selectedTaskId) return;
       args.setActionState(action === "confirm" ? "正在确认 LP 候选..." : "正在忽略 LP 候选...");
-      await fetch(`/tasks/${args.selectedTaskId}/lp-candidates/${candidateId}`, {
+      await authFetch(`/tasks/${args.selectedTaskId}/lp-candidates/${candidateId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action })
@@ -233,7 +234,7 @@ export function useTaskMutations(args: UseTaskMutationsArgs) {
             { type: "text", value: args.notesInput }
           ].filter((item) => item.value.trim())
         };
-        const created = (await fetch("/tasks/intake", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }).then((response) => response.json())) as {
+        const created = (await authFetch("/tasks/intake", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }).then((response) => response.json())) as {
           taskId: string;
           deduped?: boolean;
           dedupeWindowMinutes?: number;
@@ -242,7 +243,7 @@ export function useTaskMutations(args: UseTaskMutationsArgs) {
         if (args.whitepaperFile) {
           args.setActionState("正在上传 Whitepaper PDF...");
           const contentBase64 = await fileToBase64(args.whitepaperFile);
-          const uploadResponse = await fetch(`/tasks/${created.taskId}/upload-whitepaper-document`, {
+          const uploadResponse = await authFetch(`/tasks/${created.taskId}/upload-whitepaper-document`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -283,8 +284,8 @@ export function useTaskMutations(args: UseTaskMutationsArgs) {
       if (!confirmed) return;
 
       args.setActionState("正在删除任务...");
-      await fetch(`/tasks/${taskId}`, { method: "DELETE" });
-      const payload = (await fetch("/tasks").then((response) => response.json())) as {
+      await authFetch(`/tasks/${taskId}`, { method: "DELETE" });
+      const payload = (await authFetch("/tasks").then((response) => response.json())) as {
         items: Array<{ id: string; project_name: string; final_score: number | null; review_status: string; risk_level: string | null }>;
       };
       args.setTasks(payload.items);
@@ -338,7 +339,7 @@ export function useTaskMutations(args: UseTaskMutationsArgs) {
       args.setIsSyncingSources(true);
       try {
         args.setActionState("正在同步来源到当前任务...");
-        const response = await fetch(`/tasks/${args.selectedTaskId}/sync-sources`, {
+        const response = await authFetch(`/tasks/${args.selectedTaskId}/sync-sources`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

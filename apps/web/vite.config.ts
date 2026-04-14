@@ -7,7 +7,8 @@ export default defineConfig({
     port: 5173,
     proxy: {
       "/tasks": "http://localhost:3000",
-      "/health": "http://localhost:3000"
+      "/health": "http://localhost:3000",
+      "/auth": "http://localhost:3000"
     }
   }
 });

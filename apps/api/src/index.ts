@@ -39,6 +39,9 @@ import {
   upsertTenantTarget,
   upsertCommunityEvidence
 } from '@yunyingbot/application';
+import { loginUser, invalidateSession, validateSession, createUser, hashPassword, getDiscordAuthUrl, exchangeDiscordCode, fetchDiscordUser, fetchDiscordGuilds, loginOrCreateDiscordUser, validateOAuthState } from '@yunyingbot/application';
+import type { AuthUser } from '@yunyingbot/application';
+import { requireAuth } from './authMiddleware.js';
 import type { TaskInputPayload } from '@yunyingbot/shared';
 
 const PORT = Number(process.env.PORT ?? 3000);
@@ -80,6 +83,76 @@ const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://localhost:${PORT}`);
 
   if (req.method === 'GET' && url.pathname === '/health') return sendJson(res, 200, { ok: true, service: 'api', db: 'postgres' });
+
+  // --- Auth routes (no token required) ---
+  if (req.method === 'POST' && url.pathname === '/auth/login') {
+    try {
+      const body = await readJsonBody<{ email: string; password: string }>(req);
+      if (!body.email?.trim() || !body.password) return sendJson(res, 400, { error: 'missing_credentials' });
+      const result = await loginUser(db, body.email.trim(), body.password);
+      if (!result) return sendJson(res, 401, { error: 'invalid_credentials' });
+      return sendJson(res, 200, result);
+    } catch (error) {
+      return sendJson(res, 500, { error: 'login_failed', message: error instanceof Error ? error.message : 'unknown_error' });
+    }
+  }
+
+  if (req.method === 'POST' && url.pathname === '/auth/logout') {
+    const authHeader = req.headers.authorization;
+    if (authHeader?.startsWith('Bearer ')) {
+      await invalidateSession(db, authHeader.slice(7));
+    }
+    return sendJson(res, 200, { ok: true });
+  }
+
+  if (req.method === 'GET' && url.pathname === '/auth/me') {
+    const user = await requireAuth(req, db);
+    if (!user) return sendJson(res, 401, { error: 'unauthorized' });
+    return sendJson(res, 200, { user });
+  }
+
+  if (req.method === 'POST' && url.pathname === '/auth/seed') {
+    try {
+      const body = await readJsonBody<{ email: string; password: string; displayName?: string; tenantId?: string }>(req);
+      if (!body.email?.trim() || !body.password) return sendJson(res, 400, { error: 'missing_fields' });
+      const user = await createUser(db, body.email.trim(), body.password, body.displayName, body.tenantId);
+      return sendJson(res, 201, { user });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'unknown_error';
+      if (message.includes('duplicate') || message.includes('unique')) return sendJson(res, 409, { error: 'email_already_exists' });
+      return sendJson(res, 500, { error: 'seed_user_failed', message });
+    }
+  }
+
+  // --- Discord OAuth2 ---
+  if (req.method === 'GET' && url.pathname === '/auth/discord') {
+    try {
+      const { url: authUrl } = getDiscordAuthUrl();
+      return sendJson(res, 200, { url: authUrl });
+    } catch (error) {
+      return sendJson(res, 500, { error: 'discord_auth_url_failed', message: error instanceof Error ? error.message : 'unknown_error' });
+    }
+  }
+
+  if (req.method === 'POST' && url.pathname === '/auth/discord/callback') {
+    try {
+      const body = await readJsonBody<{ code: string; state: string }>(req);
+      if (!body.code || !body.state) return sendJson(res, 400, { error: 'missing_code_or_state' });
+      if (!validateOAuthState(body.state)) return sendJson(res, 400, { error: 'invalid_state' });
+      const tokenData = await exchangeDiscordCode(body.code);
+      const discordUser = await fetchDiscordUser(tokenData.access_token);
+      const guilds = await fetchDiscordGuilds(tokenData.access_token);
+      const result = await loginOrCreateDiscordUser(db, discordUser);
+      return sendJson(res, 200, { token: result.token, user: result.user, guilds });
+    } catch (error) {
+      return sendJson(res, 500, { error: 'discord_callback_failed', message: error instanceof Error ? error.message : 'unknown_error' });
+    }
+  }
+
+  // --- Auth guard: all routes below require a valid token ---
+  const authUser = await requireAuth(req, db);
+  if (!authUser) return sendJson(res, 401, { error: 'unauthorized' });
+
   if (req.method === 'GET' && url.pathname === '/runtime-snapshot') return sendJson(res, 200, loadRuntimeSnapshot(repoRoot));
   if (req.method === 'GET' && url.pathname === '/analysis/sample') return sendJson(res, 200, runOfflineAnalysis(repoRoot));
   if (req.method === 'GET' && url.pathname === '/tasks') return sendJson(res, 200, { items: await listTasks(db) });
